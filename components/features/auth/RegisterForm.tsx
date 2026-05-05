@@ -16,6 +16,7 @@ export default function RegisterForm() {
   const router = useRouter()
   const [step, setStep] = useState<Step>(1)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [selectedSdgs, setSelectedSdgs] = useState<number[]>([])
 
@@ -37,15 +38,20 @@ export default function RegisterForm() {
 
   async function onSubmit(data: RegisterInput) {
     setError(null)
+    setSuccessMessage(null)
     setLoading(true)
     setValue("sdg_focus", selectedSdgs)
 
     const supabase = createClient()
+    const redirectTo = `${window.location.origin}/api/auth/callback?next=${
+      data.role === "mentor" ? "/mentor" : "/dashboard"
+    }`
 
-    const { error: authError } = await supabase.auth.signUp({
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
+        emailRedirectTo: redirectTo,
         data: {
           role: data.role,
           full_name: data.full_name,
@@ -56,6 +62,12 @@ export default function RegisterForm() {
 
     if (authError) {
       setError(authError.message)
+      setLoading(false)
+      return
+    }
+
+    if (!authData.session) {
+      setSuccessMessage("Check your email to confirm your account, then sign in to continue.")
       setLoading(false)
       return
     }
@@ -139,6 +151,11 @@ export default function RegisterForm() {
               ))}
             </div>
             {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg mb-4">{error}</div>}
+            {successMessage && (
+              <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-lg mb-4">
+                {successMessage}
+              </div>
+            )}
             <div className="flex gap-3">
               <button type="button" onClick={() => setStep(2)} className="flex-1 border-2 border-gray-200 text-gray-600 py-3 rounded-xl font-semibold">Back</button>
               <button type="submit" disabled={loading} className="flex-1 bg-brand-gold text-white py-3 rounded-xl font-semibold hover:bg-amber-600 transition-colors disabled:opacity-60">

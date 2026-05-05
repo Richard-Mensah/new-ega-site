@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
+import { SAMPLE_BLOG_POSTS, type SampleBlogPost } from "@/lib/constants/blog"
 import type { BlogPost } from "@/types"
 
 export const metadata: Metadata = {
@@ -8,41 +9,8 @@ export const metadata: Metadata = {
   description: "Stay updated with EGA's latest news, participant stories, SDG insights, and leadership articles.",
 }
 
-const SAMPLE_POSTS = [
-  {
-    id: "1",
-    title: "How EGA Mentorship Changed My Career Trajectory",
-    slug: "ega-mentorship-career-story",
-    content: "A participant story from Ghana...",
-    published: true,
-    created_at: "2025-06-01",
-    author_id: "1",
-    excerpt: "One participant's journey from uncertainty to becoming a recognized youth leader across West Africa.",
-  },
-  {
-    id: "2",
-    title: "EGA's Approach to SDG 4: Quality Education in Practice",
-    slug: "sdg-4-quality-education",
-    content: "",
-    published: true,
-    created_at: "2025-07-15",
-    author_id: "1",
-    excerpt: "How EGA integrates SDG 4 into every aspect of our mentorship and educational consultancy programs.",
-  },
-  {
-    id: "3",
-    title: "2025 EGA Annual Summit Recap",
-    slug: "2025-annual-summit-recap",
-    content: "",
-    published: true,
-    created_at: "2025-09-01",
-    author_id: "1",
-    excerpt: "Key highlights, breakthroughs, and announcements from our cross-continental annual gathering.",
-  },
-]
-
 export default async function BlogPage() {
-  let posts: (BlogPost & { excerpt?: string })[] = SAMPLE_POSTS as (BlogPost & { excerpt?: string })[]
+  let posts: (BlogPost | SampleBlogPost)[] = SAMPLE_BLOG_POSTS
 
   try {
     const supabase = await createClient()
@@ -85,9 +53,9 @@ export default async function BlogPage() {
                   <h2 className="font-bold text-brand-navy text-lg leading-tight group-hover:text-brand-gold transition-colors mb-2">
                     {post.title}
                   </h2>
-                  {(post as BlogPost & { excerpt?: string }).excerpt && (
+                  {"excerpt" in post && post.excerpt && (
                     <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
-                      {(post as BlogPost & { excerpt?: string }).excerpt}
+                      {post.excerpt}
                     </p>
                   )}
                   <span className="mt-4 inline-block text-brand-gold text-sm font-semibold group-hover:underline">
