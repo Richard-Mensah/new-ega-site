@@ -5,7 +5,7 @@ import type { GalleryPhoto } from "@/types"
 
 export const metadata: Metadata = {
   title: "Gallery | EGA Mentorship International",
-  description: "Photos from EGA events, programs, and community impact initiatives across 6 countries.",
+  description: "Photos from EGA events, programs, and community impact initiatives across 6 plus countries.",
 }
 
 export default async function GalleryPage() {
