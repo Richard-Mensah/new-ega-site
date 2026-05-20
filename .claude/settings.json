@@ -21,7 +21,9 @@
       "Bash(git update-ref *)",
       "Bash(Remove-Item \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\.git\\\\refs\\\\remotes\\\\origin\\\\HEAD\" -Force -ErrorAction SilentlyContinue)",
       "Bash(Remove-Item \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\.git\\\\packed-refs\" -Force -ErrorAction SilentlyContinue)",
-      "Bash(Write-Output \"done\")"
+      "Bash(Write-Output \"done\")",
+      "Bash(findstr /E \"\\\\.env\")",
+      "Bash(dir \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\supabase\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\joe\\Documents\\GitHub\\new-ega-site\\node_modules\\next"

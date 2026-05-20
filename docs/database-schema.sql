@@ -120,6 +120,27 @@ alter table gallery_photos enable row level security;
 -- RLS POLICIES
 -- ============================================================
 
+-- Drop existing policies first so this script is safe to re-run
+drop policy if exists "profiles_select_own" on profiles;
+drop policy if exists "profiles_mentor_reads_mentees" on profiles;
+drop policy if exists "profiles_insert_own" on profiles;
+drop policy if exists "profiles_update_own" on profiles;
+drop policy if exists "pairs_read" on mentorship_pairs;
+drop policy if exists "pairs_insert_mentor" on mentorship_pairs;
+drop policy if exists "sessions_rw" on sessions;
+drop policy if exists "projects_own" on projects;
+drop policy if exists "projects_mentor_read" on projects;
+drop policy if exists "milestones_insert_own" on milestones;
+drop policy if exists "milestones_read" on milestones;
+drop policy if exists "sdg_progress_own" on sdg_progress;
+drop policy if exists "sdg_progress_mentor_read" on sdg_progress;
+drop policy if exists "portfolio_owner" on portfolio_items;
+drop policy if exists "portfolio_public_read" on portfolio_items;
+drop policy if exists "blog_public_read" on blog_posts;
+drop policy if exists "blog_author" on blog_posts;
+drop policy if exists "gallery_public_read" on gallery_photos;
+drop policy if exists "gallery_uploader" on gallery_photos;
+
 -- Profiles
 create policy "profiles_select_own"
   on profiles for select
