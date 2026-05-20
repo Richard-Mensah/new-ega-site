@@ -72,8 +72,8 @@ export default function RegisterForm() {
       }
 
       router.push(data.role === "mentor" ? "/mentor" : "/dashboard")
-    } catch {
-      setError("Something went wrong. Please try again.")
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong. Please try again.")
     } finally {
       setLoading(false)
     }
