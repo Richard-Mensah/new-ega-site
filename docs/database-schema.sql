@@ -102,6 +102,16 @@ create table if not exists gallery_photos (
   created_at timestamptz default now()
 );
 
+-- Contact Submissions
+create table if not exists contact_submissions (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  email text not null,
+  subject text not null,
+  message text not null,
+  created_at timestamptz default now()
+);
+
 -- ============================================================
 -- ENABLE ROW LEVEL SECURITY
 -- ============================================================
@@ -115,6 +125,7 @@ alter table sdg_progress enable row level security;
 alter table portfolio_items enable row level security;
 alter table blog_posts enable row level security;
 alter table gallery_photos enable row level security;
+alter table contact_submissions enable row level security;
 
 -- ============================================================
 -- RLS POLICIES
@@ -140,6 +151,8 @@ drop policy if exists "blog_public_read" on blog_posts;
 drop policy if exists "blog_author" on blog_posts;
 drop policy if exists "gallery_public_read" on gallery_photos;
 drop policy if exists "gallery_uploader" on gallery_photos;
+drop policy if exists "contact_insert_public" on contact_submissions;
+drop policy if exists "contact_read_authenticated" on contact_submissions;
 
 -- Profiles
 create policy "profiles_select_own"
@@ -298,3 +311,13 @@ create index if not exists idx_sdg_progress_participant on sdg_progress(particip
 create index if not exists idx_blog_posts_slug on blog_posts(slug);
 create index if not exists idx_blog_posts_published on blog_posts(published, created_at desc);
 create index if not exists idx_gallery_category on gallery_photos(category, published);
+create index if not exists idx_contact_submissions_created on contact_submissions(created_at desc);
+
+-- Contact Submissions policies
+create policy "contact_insert_public"
+  on contact_submissions for insert
+  with check (true);
+
+create policy "contact_read_authenticated"
+  on contact_submissions for select
+  using (auth.role() = 'authenticated');
