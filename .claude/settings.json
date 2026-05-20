@@ -23,7 +23,9 @@
       "Bash(Remove-Item \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\.git\\\\packed-refs\" -Force -ErrorAction SilentlyContinue)",
       "Bash(Write-Output \"done\")",
       "Bash(findstr /E \"\\\\.env\")",
-      "Bash(dir \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\supabase\")"
+      "Bash(dir \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\supabase\")",
+      "Bash(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\app\\\\api\\\\contact\")",
+      "Bash(Out-Null)"
     ],
     "additionalDirectories": [
       "c:\\Users\\joe\\Documents\\GitHub\\new-ega-site\\node_modules\\next"
