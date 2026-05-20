@@ -25,7 +25,9 @@
       "Bash(findstr /E \"\\\\.env\")",
       "Bash(dir \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\supabase\")",
       "Bash(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\app\\\\api\\\\contact\")",
-      "Bash(Out-Null)"
+      "Bash(Out-Null)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\joe\\Documents\\GitHub\\new-ega-site\\node_modules\\next"
