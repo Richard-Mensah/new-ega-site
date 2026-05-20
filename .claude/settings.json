@@ -15,7 +15,13 @@
       "Bash(rm -rf \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\node_modules\\\\next\" && echo \"cleaned\")",
       "Bash(dir \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\node_modules\\\\next\\\\dist\\\\docs\\\\01-app\")",
       "Bash(dir \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\node_modules\\\\next\\\\dist\\\\docs\\\\01-app\\\\02-guides\\\\upgrading\")",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(git remote *)",
+      "Bash(git fetch *)",
+      "Bash(git update-ref *)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\.git\\\\refs\\\\remotes\\\\origin\\\\HEAD\" -Force -ErrorAction SilentlyContinue)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\.git\\\\packed-refs\" -Force -ErrorAction SilentlyContinue)",
+      "Bash(Write-Output \"done\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\joe\\Documents\\GitHub\\new-ega-site\\node_modules\\next"
