@@ -42,37 +42,41 @@ export default function RegisterForm() {
     setLoading(true)
     setValue("sdg_focus", selectedSdgs)
 
-    const supabase = createClient()
-    const redirectTo = `${window.location.origin}/api/auth/callback?next=${
-      data.role === "mentor" ? "/mentor" : "/dashboard"
-    }`
+    try {
+      const supabase = createClient()
+      const redirectTo = `${window.location.origin}/api/auth/callback?next=${
+        data.role === "mentor" ? "/mentor" : "/dashboard"
+      }`
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        emailRedirectTo: redirectTo,
-        data: {
-          role: data.role,
-          full_name: data.full_name,
-          country: data.country,
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          emailRedirectTo: redirectTo,
+          data: {
+            role: data.role,
+            full_name: data.full_name,
+            country: data.country,
+          },
         },
-      },
-    })
+      })
 
-    if (authError) {
-      setError(authError.message)
+      if (authError) {
+        setError(authError.message)
+        return
+      }
+
+      if (!authData.session) {
+        setSuccessMessage("Check your email to confirm your account, then sign in to continue.")
+        return
+      }
+
+      router.push(data.role === "mentor" ? "/mentor" : "/dashboard")
+    } catch {
+      setError("Something went wrong. Please try again.")
+    } finally {
       setLoading(false)
-      return
     }
-
-    if (!authData.session) {
-      setSuccessMessage("Check your email to confirm your account, then sign in to continue.")
-      setLoading(false)
-      return
-    }
-
-    router.push(data.role === "mentor" ? "/mentor" : "/dashboard")
   }
 
   return (

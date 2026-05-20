@@ -9,6 +9,7 @@ import Input from "@/components/ui/Input"
 export default function ContactForm() {
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const {
     register,
@@ -18,6 +19,7 @@ export default function ContactForm() {
   } = useForm<ContactInput>({ resolver: zodResolver(ContactSchema) })
 
   async function onSubmit(data: ContactInput) {
+    setError(null)
     setSubmitting(true)
     try {
       const res = await fetch("/api/contact", {
@@ -28,7 +30,11 @@ export default function ContactForm() {
       if (res.ok) {
         setSubmitted(true)
         reset()
+      } else {
+        setError("Failed to send your message. Please try again.")
       }
+    } catch {
+      setError("Network error. Please check your connection and try again.")
     } finally {
       setSubmitting(false)
     }
@@ -41,6 +47,7 @@ export default function ContactForm() {
         <h2 className="text-2xl font-bold text-brand-navy mb-2">Message Sent!</h2>
         <p className="text-gray-600">Thank you for reaching out. Our team will get back to you within 24–48 hours.</p>
         <button
+          type="button"
           onClick={() => setSubmitted(false)}
           className="mt-6 text-brand-gold font-semibold hover:underline"
         >
@@ -69,6 +76,7 @@ export default function ContactForm() {
           />
           {errors.message && <span className="text-sm text-red-600">{errors.message.message}</span>}
         </div>
+        {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
         <button
           type="submit"
           disabled={submitting}
