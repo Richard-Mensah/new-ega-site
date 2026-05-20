@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\")",
+      "Bash(dir \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\app\")",
+      "Bash(dir \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\components\")",
+      "Bash(npx tsc *)",
+      "Bash(dir \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\node_modules\\\\next\\\\dist\\\\docs\")",
+      "Bash(dir \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\node_modules\\\\next\")",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/next/package.json'\\).version\\)\")",
+      "Bash(npm install *)",
+      "Bash(node -e \"try{console.log\\(require\\('./node_modules/next/package.json'\\).version\\)}catch\\(e\\){console.log\\('not found'\\)}\")",
+      "Bash(Remove-Item -Recurse -Force \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\node_modules\\\\next\" -ErrorAction SilentlyContinue)",
+      "Bash(Write-Host \"cleaned\")",
+      "Bash(rm -rf \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\node_modules\\\\next\" && echo \"cleaned\")",
+      "Bash(dir \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\node_modules\\\\next\\\\dist\\\\docs\\\\01-app\")",
+      "Bash(dir \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\node_modules\\\\next\\\\dist\\\\docs\\\\01-app\\\\02-guides\\\\upgrading\")",
+      "Bash(npm run *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\joe\\Documents\\GitHub\\new-ega-site\\node_modules\\next"
+    ]
+  }
+}

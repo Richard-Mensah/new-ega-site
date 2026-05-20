@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SdgDetailPage({ params }: Props) {
   const { slug } = await params
   const sdg = SDG_LIST.find((s) => s.slug === slug)
-  if (!sdg) notFound()
+  if (!sdg) return notFound()
 
   const prevSdg = SDG_LIST.find((s) => s.number === sdg.number - 1)
   const nextSdg = SDG_LIST.find((s) => s.number === sdg.number + 1)
