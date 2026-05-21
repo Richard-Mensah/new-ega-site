@@ -1,10 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { createClient } from "@/lib/supabase/client"
 import Input from "@/components/ui/Input"
 import Link from "next/link"
 
@@ -17,6 +16,7 @@ export default function ForgotPasswordForm() {
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const submittingRef = useRef(false)
 
   const {
     register,
@@ -25,22 +25,30 @@ export default function ForgotPasswordForm() {
   } = useForm<FormInput>({ resolver: zodResolver(schema) })
 
   async function onSubmit(data: FormInput) {
+    if (submittingRef.current) return
+    submittingRef.current = true
     setError(null)
     setLoading(true)
-    const supabase = createClient()
-    const { error: authError } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    })
-    setLoading(false)
-    if (authError) {
-      if (authError.message.toLowerCase().includes("rate limit")) {
-        setError("Too many requests. Please check your inbox for an existing reset email, or wait a few minutes before trying again.")
-      } else {
-        setError(authError.message)
+
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email }),
+      })
+      const json = await res.json()
+
+      if (!res.ok) {
+        setError(json.error ?? "Something went wrong. Please try again.")
+        return
       }
-      return
+      setSent(true)
+    } catch {
+      setError("Something went wrong. Please try again.")
+    } finally {
+      setLoading(false)
+      submittingRef.current = false
     }
-    setSent(true)
   }
 
   if (sent) {
