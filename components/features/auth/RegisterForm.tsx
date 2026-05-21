@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client"
 import { SDG_LIST } from "@/lib/constants/sdgs"
 import { COUNTRIES } from "@/lib/constants/team"
 import Input from "@/components/ui/Input"
+import PasswordInput from "@/components/ui/PasswordInput"
 
 type Step = 1 | 2 | 3
 
@@ -123,7 +124,8 @@ export default function RegisterForm() {
             <h2 className="text-xl font-bold text-brand-navy mb-4">Your Details</h2>
             <Input label="Full Name" placeholder="Your full name" error={errors.full_name?.message} {...register("full_name")} />
             <Input label="Email Address" type="email" placeholder="you@email.com" error={errors.email?.message} {...register("email")} />
-            <Input label="Password" type="password" placeholder="Min 8 characters" error={errors.password?.message} {...register("password")} />
+            <PasswordInput label="Password" placeholder="Min 8 characters" error={errors.password?.message} {...register("password")} />
+            <PasswordInput label="Confirm Password" placeholder="Repeat your password" error={errors.confirmPassword?.message} {...register("confirmPassword")} />
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">Country</label>
               <select className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-gold" {...register("country")}>

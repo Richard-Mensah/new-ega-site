@@ -7,10 +7,16 @@ import { useRouter } from "next/navigation"
 import { LoginSchema, type LoginInput } from "@/lib/validations"
 import { createClient } from "@/lib/supabase/client"
 import Input from "@/components/ui/Input"
+import PasswordInput from "@/components/ui/PasswordInput"
 import Link from "next/link"
+
+type Role = "participant" | "mentor"
+type Step = "role" | "credentials"
 
 export default function LoginForm() {
   const router = useRouter()
+  const [step, setStep] = useState<Step>("role")
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -37,7 +43,6 @@ export default function LoginForm() {
       return
     }
 
-    // Get profile to determine role-based redirect
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
       const { data: profileRaw } = await supabase.from("profiles").select("*").eq("id", user.id).single()
@@ -46,8 +51,49 @@ export default function LoginForm() {
     }
   }
 
+  if (step === "role") {
+    return (
+      <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+        <h2 className="text-xl font-bold text-brand-navy mb-2">Sign in as a...</h2>
+        <p className="text-gray-500 text-sm mb-6">Choose your role to continue</p>
+        <div className="grid grid-cols-2 gap-4">
+          {(["participant", "mentor"] as const).map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => { setSelectedRole(r); setStep("credentials") }}
+              className={`p-6 rounded-2xl border-2 text-left transition-all hover:border-brand-gold ${selectedRole === r ? "border-brand-gold bg-brand-gold/5" : "border-gray-200"}`}
+            >
+              <div className="text-3xl mb-2">{r === "participant" ? "🎓" : "👨‍🏫"}</div>
+              <div className="font-bold text-brand-navy capitalize">{r}</div>
+              <div className="text-xs text-gray-500 mt-1">
+                {r === "participant" ? "I'm here to grow my leadership" : "I'm here to guide youth leaders"}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+      <div className="flex items-center gap-2 mb-6">
+        <button
+          type="button"
+          onClick={() => setStep("role")}
+          className="text-gray-400 hover:text-brand-navy transition-colors"
+          aria-label="Back to role selection"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        <span className="text-sm text-gray-500 capitalize">
+          Signing in as <span className="font-semibold text-brand-navy">{selectedRole}</span>
+        </span>
+      </div>
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <Input
           label="Email Address"
@@ -57,9 +103,8 @@ export default function LoginForm() {
           {...register("email")}
         />
         <div>
-          <Input
+          <PasswordInput
             label="Password"
-            type="password"
             placeholder="Your password"
             error={errors.password?.message}
             {...register("password")}

@@ -33,7 +33,11 @@ export default function ForgotPasswordForm() {
     })
     setLoading(false)
     if (authError) {
-      setError(authError.message)
+      if (authError.message.toLowerCase().includes("rate limit")) {
+        setError("Too many requests. Please check your inbox for an existing reset email, or wait a few minutes before trying again.")
+      } else {
+        setError(authError.message)
+      }
       return
     }
     setSent(true)
