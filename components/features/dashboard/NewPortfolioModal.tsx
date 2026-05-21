@@ -13,14 +13,10 @@ import { createClient } from "@/lib/supabase/client"
 const PortfolioItemSchema = z.object({
   title: z.string().min(1, "Title is required"),
   type: z.enum(["article", "project", "certificate", "video"]),
-  content_url: z
-    .string()
-    .url("Enter a valid URL (https://...)")
-    .or(z.literal(""))
-    .optional(),
-  published: z.boolean().default(false),
+  content_url: z.string().optional(),
+  published: z.boolean(),
 })
-type FormInput = z.infer<typeof PortfolioItemSchema>
+type FormInput = z.output<typeof PortfolioItemSchema>
 
 const TYPES = ["article", "project", "certificate", "video"] as const
 
