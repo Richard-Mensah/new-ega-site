@@ -16,7 +16,9 @@ const PortfolioItemSchema = z.object({
   content_url: z.string().optional(),
   published: z.boolean(),
 })
-type FormInput = z.output<typeof PortfolioItemSchema>
+
+type FormValues = z.input<typeof PortfolioItemSchema>
+type FormOutput = z.output<typeof PortfolioItemSchema>
 
 const TYPES = ["article", "project", "certificate", "video"] as const
 
@@ -26,7 +28,7 @@ export default function NewPortfolioModal() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormInput>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues, unknown, FormOutput>({
     resolver: zodResolver(PortfolioItemSchema),
     defaultValues: { type: "article", published: false },
   })
@@ -37,7 +39,7 @@ export default function NewPortfolioModal() {
     setError(null)
   }
 
-  async function onSubmit(data: FormInput) {
+  async function onSubmit(data: FormOutput) {
     setError(null)
     setLoading(true)
     try {

@@ -29,7 +29,8 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(dir /b /s \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\src\\\\app\")",
-      "Bash(findstr /i \"login register forgot password dashboard\")"
+      "Bash(findstr /i \"login register forgot password dashboard\")",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('@hookform/resolvers:', p.dependencies['@hookform/resolvers'] || p.devDependencies['@hookform/resolvers']\\); console.log\\('react-hook-form:', p.dependencies['react-hook-form'] || p.devDependencies['react-hook-form']\\); console.log\\('zod:', p.dependencies['zod'] || p.devDependencies['zod']\\)\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\joe\\Documents\\GitHub\\new-ega-site\\node_modules\\next"
