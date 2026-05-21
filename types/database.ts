@@ -240,6 +240,24 @@ export type Database = {
         }
         Relationships: []
       }
+      module_completions: {
+        Row: {
+          id: string
+          participant_id: string
+          module_id: number
+          topic_id: number
+          completed_at: string
+        }
+        Insert: {
+          id?: string
+          participant_id: string
+          module_id: number
+          topic_id: number
+          completed_at?: string
+        }
+        Update: Record<string, never>
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           id: string
