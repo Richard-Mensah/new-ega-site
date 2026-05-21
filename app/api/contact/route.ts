@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase/server"
 import { ContactSchema } from "@/lib/validations"
 
 export async function POST(request: NextRequest) {
@@ -11,10 +11,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 })
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const supabase = await createClient()
 
     const { error } = await supabase.from("contact_submissions").insert({
       name: parsed.data.name,

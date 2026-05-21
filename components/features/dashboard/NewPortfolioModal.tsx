@@ -59,7 +59,8 @@ export default function NewPortfolioModal() {
       handleClose()
       router.refresh()
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong")
+      const msg = e instanceof Error ? e.message : "Something went wrong"
+      setError(msg.includes("row-level security") ? "Permission denied. Please try again or contact support." : msg)
     } finally {
       setLoading(false)
     }
@@ -68,6 +69,7 @@ export default function NewPortfolioModal() {
   return (
     <>
       <button
+        type="button"
         onClick={() => setOpen(true)}
         className="flex items-center gap-2 bg-brand-gold text-white px-4 py-2 rounded-xl font-semibold text-sm hover:bg-amber-600 transition-colors"
       >
