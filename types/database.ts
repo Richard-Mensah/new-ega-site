@@ -16,6 +16,9 @@ export type Database = {
           avatar_url: string | null
           sdg_focus: number[]
           bio: string | null
+          organization: string | null
+          linkedin_url: string | null
+          last_seen_at: string | null
           created_at: string
         }
         Insert: {
@@ -26,6 +29,9 @@ export type Database = {
           avatar_url?: string | null
           sdg_focus?: number[]
           bio?: string | null
+          organization?: string | null
+          linkedin_url?: string | null
+          last_seen_at?: string | null
           created_at?: string
         }
         Update: {
@@ -35,6 +41,9 @@ export type Database = {
           avatar_url?: string | null
           sdg_focus?: number[]
           bio?: string | null
+          organization?: string | null
+          linkedin_url?: string | null
+          last_seen_at?: string | null
         }
         Relationships: []
       }
