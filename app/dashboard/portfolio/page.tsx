@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import Card from "@/components/ui/Card"
 import Badge from "@/components/ui/Badge"
-import { Briefcase, Plus, FileText, Video, Award } from "lucide-react"
+import NewPortfolioModal from "@/components/features/dashboard/NewPortfolioModal"
+import { Briefcase, FileText, Video, Award } from "lucide-react"
 import type { PortfolioItem } from "@/types"
 import type { Tables } from "@/types/database"
 
@@ -38,10 +39,7 @@ export default async function PortfolioPage() {
           <h1 className="text-2xl font-bold text-brand-navy">My Portfolio</h1>
           <p className="text-gray-500 text-sm mt-1">Showcase your projects, articles, and achievements</p>
         </div>
-        <button className="flex items-center gap-2 bg-brand-gold text-white px-4 py-2 rounded-xl font-semibold text-sm hover:bg-amber-600 transition-colors">
-          <Plus size={16} />
-          Add Item
-        </button>
+        <NewPortfolioModal />
       </div>
 
       {/* Stats */}

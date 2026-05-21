@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import Card from "@/components/ui/Card"
 import Badge from "@/components/ui/Badge"
+import ScheduleSessionModal from "@/components/features/mentor/ScheduleSessionModal"
 import { Calendar, MessageCircle } from "lucide-react"
 import type { Tables } from "@/types/database"
 
@@ -10,14 +11,28 @@ export default async function SessionsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login")
 
-  const { data: sessionsRaw } = await supabase
-    .from("sessions")
-    .select("*, profiles!participant_id(full_name)")
-    .eq("mentor_id", user.id)
-    .order("scheduled_at", { ascending: false })
-    .limit(20)
+  const [{ data: sessionsRaw }, { data: pairsRaw }] = await Promise.all([
+    supabase
+      .from("sessions")
+      .select("*, profiles!participant_id(full_name)")
+      .eq("mentor_id", user.id)
+      .order("scheduled_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("mentorship_pairs")
+      .select("participant_id, profiles!participant_id(full_name)")
+      .eq("mentor_id", user.id)
+      .eq("status", "active"),
+  ])
+
   type SessionWithProfile = Tables<"sessions"> & { profiles: { full_name: string } | null }
   const sessions = sessionsRaw as SessionWithProfile[] | null
+
+  type PairWithProfile = { participant_id: string; profiles: { full_name: string } | null }
+  const mentees = ((pairsRaw as PairWithProfile[]) ?? []).map((p) => ({
+    id: p.participant_id,
+    full_name: p.profiles?.full_name ?? "Unknown",
+  }))
 
   const upcoming = sessions?.filter((s) => s.status === "scheduled") ?? []
   const past = sessions?.filter((s) => s.status !== "scheduled") ?? []
@@ -53,9 +68,12 @@ export default async function SessionsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-brand-navy">Sessions</h1>
-        <p className="text-gray-500 text-sm mt-1">Manage and review your mentorship sessions</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-brand-navy">Sessions</h1>
+          <p className="text-gray-500 text-sm mt-1">Manage and review your mentorship sessions</p>
+        </div>
+        <ScheduleSessionModal mentees={mentees} />
       </div>
 
       {upcoming.length > 0 && (

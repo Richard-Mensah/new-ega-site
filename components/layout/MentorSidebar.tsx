@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, BarChart2, Users, Calendar, Settings, LogOut } from "lucide-react"
+import { Home, BarChart2, Users, Calendar, Globe, Settings, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/mentor/analytics", icon: BarChart2, label: "Analytics" },
   { href: "/mentor/mentees", icon: Users, label: "Mentees" },
   { href: "/mentor/sessions", icon: Calendar, label: "Sessions" },
+  { href: "/mentor/participants", icon: Globe, label: "Participants" },
 ]
 
 export default function MentorSidebar() {

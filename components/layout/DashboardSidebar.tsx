@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, BookOpen, Folder, Users, Briefcase, Settings, LogOut } from "lucide-react"
+import { Home, BookOpen, Folder, Users, Briefcase, Globe, Settings, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/dashboard", icon: Home, label: "Overview" },
   { href: "/dashboard/learning", icon: BookOpen, label: "Learning" },
   { href: "/dashboard/projects", icon: Folder, label: "Projects" },
+  { href: "/dashboard/community", icon: Globe, label: "Community" },
   { href: "/dashboard/mentor", icon: Users, label: "Mentor" },
   { href: "/dashboard/portfolio", icon: Briefcase, label: "Portfolio" },
 ]

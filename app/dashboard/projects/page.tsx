@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import Card from "@/components/ui/Card"
 import Badge from "@/components/ui/Badge"
-import { Folder, Plus } from "lucide-react"
+import NewProjectModal from "@/components/features/dashboard/NewProjectModal"
+import { Folder } from "lucide-react"
 import { SDG_LIST } from "@/lib/constants/sdgs"
 import type { Project } from "@/types"
 import type { Tables } from "@/types/database"
@@ -24,10 +25,7 @@ export default async function ProjectsPage() {
           <h1 className="text-2xl font-bold text-brand-navy">My Projects</h1>
           <p className="text-gray-500 text-sm mt-1">Track your SDG-aligned community projects</p>
         </div>
-        <button className="flex items-center gap-2 bg-brand-gold text-white px-4 py-2 rounded-xl font-semibold text-sm hover:bg-amber-600 transition-colors">
-          <Plus size={16} />
-          New Project
-        </button>
+        <NewProjectModal />
       </div>
 
       {/* Stage pipeline */}

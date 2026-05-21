@@ -198,6 +198,22 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_likes: {
+        Row: {
+          id: string
+          liker_id: string
+          liked_id: string
+          created_at: string
+        }
+        Insert: {
+          liker_id: string
+          liked_id: string
+          id?: string
+          created_at?: string
+        }
+        Update: Record<string, never>
+        Relationships: []
+      }
       gallery_photos: {
         Row: {
           id: string
