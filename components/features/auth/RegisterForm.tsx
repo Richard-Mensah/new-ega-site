@@ -62,7 +62,11 @@ export default function RegisterForm() {
       })
 
       if (authError) {
-        setError(authError.message)
+        if (authError.message.toLowerCase().includes("rate limit")) {
+          setError("Too many sign-up attempts. Please check your inbox for a confirmation email, or wait a few minutes before trying again.")
+        } else {
+          setError(authError.message)
+        }
         return
       }
 

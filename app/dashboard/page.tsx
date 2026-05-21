@@ -13,24 +13,29 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login")
 
-  const { data: profileRaw } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+  const [
+    { data: profileRaw },
+    { data: sdgRaw },
+    { data: projectsRaw },
+    { data: sessionsRaw },
+    { data: pairRaw },
+  ] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", user.id).single(),
+    supabase.from("sdg_progress").select("*").eq("participant_id", user.id),
+    supabase.from("projects").select("*").eq("participant_id", user.id).eq("status", "active"),
+    supabase.from("sessions").select("*").eq("participant_id", user.id).eq("status", "completed"),
+    supabase
+      .from("mentorship_pairs")
+      .select("mentor_id, profiles!mentor_id(full_name, country, avatar_url)")
+      .eq("participant_id", user.id)
+      .eq("status", "active")
+      .single(),
+  ])
+
   const profile = profileRaw as Tables<"profiles"> | null
-
-  const { data: sdgRaw } = await supabase.from("sdg_progress").select("*").eq("participant_id", user.id)
   const sdgProgress = sdgRaw as Tables<"sdg_progress">[] | null
-
-  const { data: projectsRaw } = await supabase.from("projects").select("*").eq("participant_id", user.id).eq("status", "active")
   const projects = projectsRaw as Tables<"projects">[] | null
-
-  const { data: sessionsRaw } = await supabase.from("sessions").select("*").eq("participant_id", user.id).eq("status", "completed")
   const sessions = sessionsRaw as Tables<"sessions">[] | null
-
-  const { data: pairRaw } = await supabase
-    .from("mentorship_pairs")
-    .select("mentor_id, profiles!mentor_id(full_name, country, avatar_url)")
-    .eq("participant_id", user.id)
-    .eq("status", "active")
-    .single()
   type MentorProfile = { full_name: string; country: string | null; avatar_url: string | null }
   const pair = pairRaw as { mentor_id: string; profiles: MentorProfile | null } | null
 

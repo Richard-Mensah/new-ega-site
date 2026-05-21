@@ -27,7 +27,9 @@
       "Bash(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\app\\\\api\\\\contact\")",
       "Bash(Out-Null)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(dir /b /s \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\src\\\\app\")",
+      "Bash(findstr /i \"login register forgot password dashboard\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\joe\\Documents\\GitHub\\new-ega-site\\node_modules\\next"

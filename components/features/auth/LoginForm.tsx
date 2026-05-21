@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { LoginSchema, type LoginInput } from "@/lib/validations"
 import { createClient } from "@/lib/supabase/client"
 import Input from "@/components/ui/Input"
+import Link from "next/link"
 
 export default function LoginForm() {
   const router = useRouter()
@@ -55,13 +56,20 @@ export default function LoginForm() {
           error={errors.email?.message}
           {...register("email")}
         />
-        <Input
-          label="Password"
-          type="password"
-          placeholder="Your password"
-          error={errors.password?.message}
-          {...register("password")}
-        />
+        <div>
+          <Input
+            label="Password"
+            type="password"
+            placeholder="Your password"
+            error={errors.password?.message}
+            {...register("password")}
+          />
+          <div className="flex justify-end mt-1">
+            <Link href="/forgot-password" className="text-xs text-brand-gold hover:underline">
+              Forgot your password?
+            </Link>
+          </div>
+        </div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
