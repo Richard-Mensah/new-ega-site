@@ -93,6 +93,7 @@ export default function CommunityGrid({
     })
   }, [participants, search, sdgFilter, countryFilter])
 
+  const myLikesSet = useMemo(() => new Set(myLikes), [myLikes])
   const hasFilters = search !== "" || sdgFilter !== null || countryFilter !== null
 
   function resetFilters() {
@@ -211,7 +212,7 @@ export default function CommunityGrid({
               key={p.id}
               participant={p}
               likeCount={likeCounts[p.id] ?? 0}
-              liked={myLikes.includes(p.id)}
+              liked={myLikesSet.has(p.id)}
             />
           ))}
         </div>

@@ -41,3 +41,10 @@ body {
   color: #111827;
   background-color: #ffffff;
 }
+
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

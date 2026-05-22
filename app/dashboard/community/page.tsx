@@ -14,7 +14,7 @@ export default async function CommunityPage() {
     supabase
       .from("profiles")
       .select(
-        "id, full_name, country, organization, bio, avatar_url, sdg_focus, created_at"
+        "id, full_name, country, organization, bio, avatar_url, sdg_focus, linkedin_url, created_at"
       )
       .eq("role", "participant")
       .neq("id", user.id)
