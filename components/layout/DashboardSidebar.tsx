@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, BookOpen, Folder, Users, Briefcase, Globe, Settings, LogOut } from "lucide-react"
+import { Home, BookOpen, Folder, Users, Briefcase, Globe, Settings, LogOut, ShieldCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/portfolio", icon: Briefcase, label: "Portfolio" },
 ]
 
-export default function DashboardSidebar() {
+export default function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -52,6 +52,24 @@ export default function DashboardSidebar() {
       })}
 
       <div className="flex-1" />
+
+      {isAdmin && (
+        <Link
+          href="/dashboard/admin"
+          title="Manage Participants"
+          className={cn(
+            "group relative flex items-center justify-center w-10 h-10 rounded-xl transition-all",
+            pathname.startsWith("/dashboard/admin")
+              ? "bg-brand-gold text-white"
+              : "text-amber-400/80 hover:text-amber-300 hover:bg-white/10"
+          )}
+        >
+          <ShieldCheck size={20} />
+          <span className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+            Manage Participants
+          </span>
+        </Link>
+      )}
 
       <Link
         href="/dashboard/settings"
