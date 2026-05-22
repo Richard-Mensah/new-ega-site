@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import type { RealtimeChannel } from "@supabase/supabase-js"
 import ProfileAvatar from "@/components/ui/ProfileAvatar"
-import { Send, ChevronLeft, Paperclip, Mic, File as FileIcon } from "lucide-react"
+import { Send, ChevronLeft, Paperclip, Mic, MicOff, File as FileIcon, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export type ChatMessage = {
@@ -36,6 +36,9 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
   const [isPartnerOnline, setIsPartnerOnline] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
+  const [recordingSecs, setRecordingSecs] = useState(0)
+  // Recorded audio waiting to be reviewed/sent
+  const [pendingAudio, setPendingAudio] = useState<{ blob: Blob; url: string; name: string } | null>(null)
 
   const router = useRouter()
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -45,6 +48,7 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
   const fileInputRef = useRef<HTMLInputElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const supabase = createClient()
 
   const markRead = useCallback(() => {
@@ -60,6 +64,13 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
   }, [messages])
 
   useEffect(() => { markRead() }, [markRead])
+
+  // Revoke blob URL when pending audio is cleared
+  useEffect(() => {
+    return () => {
+      if (pendingAudio) URL.revokeObjectURL(pendingAudio.url)
+    }
+  }, [pendingAudio])
 
   useEffect(() => {
     const channelId = [currentUserId, partnerId].sort().join("-")
@@ -109,12 +120,13 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
 
     return () => {
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
       supabase.removeChannel(ch)
       channelRef.current = null
     }
   }, [supabase, currentUserId, partnerId, markRead])
 
-  async function sendMessage(
+  async function postMessage(
     text: string,
     attachType?: string | null,
     attachUrl?: string | null,
@@ -144,13 +156,6 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
     }
   }
 
-  async function handleSend() {
-    const text = input.trim()
-    if (!text || sending) return
-    setInput("")
-    await sendMessage(text)
-  }
-
   async function uploadFile(file: File, type: "image" | "audio" | "file") {
     setUploading(true)
     try {
@@ -158,10 +163,29 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
       const { data, error } = await supabase.storage.from("chat-attachments").upload(path, file)
       if (error || !data) return
       const { data: urlData } = supabase.storage.from("chat-attachments").getPublicUrl(data.path)
-      await sendMessage("", type, urlData.publicUrl, file.name)
+      return { url: urlData.publicUrl, name: file.name }
     } finally {
       setUploading(false)
     }
+  }
+
+  async function handleSend() {
+    // Pending audio: upload first, then send
+    if (pendingAudio) {
+      const file = new File([pendingAudio.blob], pendingAudio.name, { type: pendingAudio.blob.type })
+      const uploaded = await uploadFile(file, "audio")
+      if (uploaded) {
+        await postMessage("", "audio", uploaded.url, uploaded.name)
+      }
+      URL.revokeObjectURL(pendingAudio.url)
+      setPendingAudio(null)
+      return
+    }
+    // Text message
+    const text = input.trim()
+    if (!text || sending) return
+    setInput("")
+    await postMessage(text)
   }
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -170,7 +194,19 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
     e.target.value = ""
     const type: "image" | "audio" | "file" = file.type.startsWith("image/") ? "image"
       : file.type.startsWith("audio/") ? "audio" : "file"
-    await uploadFile(file, type)
+    const uploaded = await uploadFile(file, type)
+    if (uploaded) await postMessage("", type, uploaded.url, uploaded.name)
+  }
+
+  function toggleRecording() {
+    if (isRecording) {
+      // Stop → audio lands in pendingAudio via onstop handler
+      mediaRecorderRef.current?.stop()
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
+      setIsRecording(false)
+    } else {
+      startRecording()
+    }
   }
 
   async function startRecording() {
@@ -178,24 +214,35 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const mr = new MediaRecorder(stream)
       audioChunksRef.current = []
+      setRecordingSecs(0)
+
       mr.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data) }
-      mr.onstop = async () => {
+
+      mr.onstop = () => {
         stream.getTracks().forEach((t) => t.stop())
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" })
-        const file = new File([blob], `voice-${Date.now()}.webm`, { type: "audio/webm" })
-        await uploadFile(file, "audio")
+        const url = URL.createObjectURL(blob)
+        const name = `voice-${Date.now()}.webm`
+        // Show preview — don't send yet
+        setPendingAudio({ blob, url, name })
       }
+
       mr.start()
       mediaRecorderRef.current = mr
       setIsRecording(true)
+
+      // Tick timer so user sees duration while recording
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingSecs((s) => s + 1)
+      }, 1000)
     } catch {
       // mic permission denied — silently ignore
     }
   }
 
-  function stopRecording() {
-    mediaRecorderRef.current?.stop()
-    setIsRecording(false)
+  function discardPendingAudio() {
+    if (pendingAudio) URL.revokeObjectURL(pendingAudio.url)
+    setPendingAudio(null)
   }
 
   function handleInputChange(val: string) {
@@ -212,6 +259,12 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
       e.preventDefault()
       handleSend()
     }
+  }
+
+  function formatSecs(s: number) {
+    const m = Math.floor(s / 60).toString().padStart(2, "0")
+    const sec = (s % 60).toString().padStart(2, "0")
+    return `${m}:${sec}`
   }
 
   const isBusy = sending || uploading
@@ -276,7 +329,6 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
                     : "bg-gray-100 text-gray-800 rounded-tl-sm"
                 )}
               >
-                {/* Attachment rendering */}
                 {msg.attachment_type === "image" && msg.attachment_url && (
                   <img
                     src={msg.attachment_url}
@@ -302,7 +354,6 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
                     <span className="truncate max-w-[180px]">{msg.attachment_name ?? "File"}</span>
                   </a>
                 )}
-
                 {msg.content && <p>{msg.content}</p>}
                 <p className={cn("text-[10px] mt-1 text-right", isMe ? "text-white/60" : "text-gray-400")}>
                   {new Date(msg.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
@@ -316,66 +367,102 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
 
       {/* Input */}
       <div className="shrink-0 px-4 py-3 border-t border-gray-100 bg-white">
-        <div className="flex items-end gap-2">
-          {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            className="hidden"
-            accept="image/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
-            onChange={handleFileSelect}
-          />
+        {/* === RECORDING in progress === */}
+        {isRecording && (
+          <div className="flex items-center gap-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+            <span className="text-sm font-medium text-red-500 tabular-nums">{formatSecs(recordingSecs)}</span>
+            <span className="flex-1 text-sm text-gray-400">Recording…</span>
+            <button
+              type="button"
+              onClick={toggleRecording}
+              aria-label="Stop recording"
+              className="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors shrink-0"
+            >
+              <MicOff size={18} />
+            </button>
+          </div>
+        )}
 
-          {/* Attach file button */}
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isBusy}
-            aria-label="Attach file"
-            className="w-10 h-10 rounded-xl text-gray-400 hover:text-brand-navy hover:bg-gray-100 flex items-center justify-center transition-colors disabled:opacity-40 shrink-0"
-          >
-            <Paperclip size={18} />
-          </button>
+        {/* === PENDING AUDIO preview — waiting for user to send === */}
+        {!isRecording && pendingAudio && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={discardPendingAudio}
+              aria-label="Discard recording"
+              className="w-9 h-9 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors shrink-0"
+            >
+              <X size={18} />
+            </button>
+            <audio controls src={pendingAudio.url} title="Voice message preview" className="flex-1 h-9 min-w-0" />
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={isBusy}
+              aria-label="Send voice message"
+              className="w-10 h-10 bg-brand-navy text-white rounded-xl flex items-center justify-center hover:bg-brand-navy/90 transition-colors disabled:opacity-40 shrink-0"
+            >
+              {uploading ? (
+                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Send size={16} />
+              )}
+            </button>
+          </div>
+        )}
 
-          {/* Voice message button */}
-          <button
-            type="button"
-            onMouseDown={startRecording}
-            onMouseUp={stopRecording}
-            onMouseLeave={stopRecording}
-            onTouchStart={startRecording}
-            onTouchEnd={stopRecording}
-            disabled={isBusy}
-            aria-label={isRecording ? "Recording…" : "Record voice message"}
-            className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center transition-colors disabled:opacity-40 shrink-0",
-              isRecording
-                ? "bg-red-500 text-white animate-pulse"
-                : "text-gray-400 hover:text-brand-navy hover:bg-gray-100"
-            )}
-          >
-            <Mic size={18} />
-          </button>
+        {/* === NORMAL text + attach input === */}
+        {!isRecording && !pendingAudio && (
+          <div className="flex items-end gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept="image/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
+              onChange={handleFileSelect}
+            />
 
-          <textarea
-            rows={1}
-            value={input}
-            onChange={(e) => handleInputChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={uploading ? "Uploading…" : `Message ${partnerName}…`}
-            disabled={uploading}
-            className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy/30 focus:border-brand-navy max-h-32 disabled:opacity-50"
-          />
-          <button
-            type="button"
-            onClick={handleSend}
-            disabled={!input.trim() || isBusy}
-            aria-label="Send message"
-            className="w-10 h-10 bg-brand-navy text-white rounded-xl flex items-center justify-center hover:bg-brand-navy/90 transition-colors disabled:opacity-40 shrink-0"
-          >
-            <Send size={16} />
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isBusy}
+              aria-label="Attach file"
+              className="w-10 h-10 rounded-xl text-gray-400 hover:text-brand-navy hover:bg-gray-100 flex items-center justify-center transition-colors disabled:opacity-40 shrink-0"
+            >
+              <Paperclip size={18} />
+            </button>
+
+            <button
+              type="button"
+              onClick={toggleRecording}
+              disabled={isBusy}
+              aria-label="Record voice message"
+              className="w-10 h-10 rounded-xl text-gray-400 hover:text-brand-navy hover:bg-gray-100 flex items-center justify-center transition-colors disabled:opacity-40 shrink-0"
+            >
+              <Mic size={18} />
+            </button>
+
+            <textarea
+              rows={1}
+              value={input}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={uploading ? "Uploading…" : `Message ${partnerName}…`}
+              disabled={uploading}
+              className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy/30 focus:border-brand-navy max-h-32 disabled:opacity-50"
+            />
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={!input.trim() || isBusy}
+              aria-label="Send message"
+              className="w-10 h-10 bg-brand-navy text-white rounded-xl flex items-center justify-center hover:bg-brand-navy/90 transition-colors disabled:opacity-40 shrink-0"
+            >
+              <Send size={16} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
