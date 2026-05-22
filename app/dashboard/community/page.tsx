@@ -1,36 +1,39 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import { SDG_LIST } from "@/lib/constants/sdgs"
-import LikeButton from "@/components/features/community/LikeButton"
-import ProfileAvatar from "@/components/ui/ProfileAvatar"
-import type { Tables } from "@/types/database"
-
-type Profile = Tables<"profiles">
-type Like = Pick<Tables<"profile_likes">, "liker_id" | "liked_id">
+import CommunityGrid from "@/components/features/community/CommunityGrid"
+import type { PublicProfile } from "@/types"
 
 export default async function CommunityPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) redirect("/login")
 
   const [{ data: participantsRaw }, { data: likesRaw }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("*")
+      .select(
+        "id, full_name, country, organization, bio, avatar_url, sdg_focus, created_at"
+      )
       .eq("role", "participant")
       .neq("id", user.id)
       .order("created_at", { ascending: false }),
     supabase.from("profile_likes").select("liker_id, liked_id"),
   ])
 
-  const participants = (participantsRaw as Profile[]) ?? []
-  const likes = (likesRaw as Like[]) ?? []
+  const participants = (participantsRaw ?? []) as PublicProfile[]
+  const likes = likesRaw ?? []
 
-  const likeCountMap = new Map<string, number>()
-  const myLikedSet = new Set<string>()
+  // Build like counts per profile
+  const likeCounts: Record<string, number> = {}
+  const myLikes: string[] = []
+
   for (const like of likes) {
-    likeCountMap.set(like.liked_id, (likeCountMap.get(like.liked_id) ?? 0) + 1)
-    if (like.liker_id === user.id) myLikedSet.add(like.liked_id)
+    likeCounts[like.liked_id] = (likeCounts[like.liked_id] ?? 0) + 1
+    if (like.liker_id === user.id) {
+      myLikes.push(like.liked_id)
+    }
   }
 
   return (
@@ -38,86 +41,15 @@ export default async function CommunityPage() {
       <div>
         <h1 className="text-2xl font-bold text-brand-navy">Community</h1>
         <p className="text-gray-500 text-sm mt-1">
-          {participants.length} participant{participants.length !== 1 ? "s" : ""} in the EGA community
+          Connect and appreciate fellow EGA participants
         </p>
       </div>
-
-      {participants.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
-          <div className="text-5xl mb-4">👥</div>
-          <p className="font-medium text-gray-500">No other participants yet</p>
-          <p className="text-sm mt-1">Be the first to invite others to join</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {participants.map((p) => {
-            const sdgs = (p.sdg_focus ?? []).slice(0, 3)
-            const extraSdgs = (p.sdg_focus ?? []).length - 3
-
-            return (
-              <div
-                key={p.id}
-                className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col gap-3 hover:shadow-sm transition-shadow"
-              >
-                <div className="flex items-center gap-3">
-                  <ProfileAvatar
-                    avatarUrl={p.avatar_url}
-                    fullName={p.full_name}
-                    size="md"
-                    className="border-2 border-gray-100"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-brand-navy truncate">{p.full_name}</p>
-                    {p.organization && (
-                      <p className="text-xs font-semibold text-brand-gold truncate">{p.organization}</p>
-                    )}
-                    {p.country && (
-                      <p className="text-xs text-gray-400 truncate">{p.country}</p>
-                    )}
-                  </div>
-                </div>
-
-                {p.bio && (
-                  <p className="text-xs text-gray-500 line-clamp-2">{p.bio}</p>
-                )}
-
-                {sdgs.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {sdgs.map((num: number) => {
-                      const sdg = SDG_LIST.find((s) => s.number === num)
-                      return sdg ? (
-                        <span
-                          key={num}
-                          className="text-white text-xs px-2 py-0.5 rounded-full font-semibold"
-                          style={{ backgroundColor: sdg.color }}
-                        >
-                          SDG {num}
-                        </span>
-                      ) : null
-                    })}
-                    {extraSdgs > 0 && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
-                        +{extraSdgs} more
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between pt-2 border-t border-gray-50">
-                  <span className="text-xs text-gray-400">
-                    Joined {new Date(p.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-                  </span>
-                  <LikeButton
-                    profileId={p.id}
-                    initialCount={likeCountMap.get(p.id) ?? 0}
-                    initialLiked={myLikedSet.has(p.id)}
-                  />
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+      <CommunityGrid
+        participants={participants}
+        likeCounts={likeCounts}
+        myLikes={myLikes}
+        currentUserId={user.id}
+      />
     </div>
   )
 }
