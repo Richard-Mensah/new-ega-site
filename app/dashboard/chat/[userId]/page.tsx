@@ -69,7 +69,7 @@ export default async function ChatThreadPage({ params }: { params: Promise<{ use
 
   return (
     <div className="flex h-[calc(100vh-4rem)]">
-      <div className="w-80 border-r border-gray-100 bg-white flex flex-col shrink-0">
+      <div className="hidden md:flex md:w-80 border-r border-gray-100 bg-white flex-col shrink-0">
         <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100">
           <MessageCircle size={18} className="text-brand-navy" />
           <h1 className="font-bold text-brand-navy">Messages</h1>

@@ -42,7 +42,7 @@ export default async function ChatPage() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)]">
-      <div className="w-80 border-r border-gray-100 bg-white flex flex-col shrink-0">
+      <div className="w-full md:w-80 md:shrink-0 border-r border-gray-100 bg-white flex flex-col">
         <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100">
           <MessageCircle size={18} className="text-brand-navy" />
           <h1 className="font-bold text-brand-navy">Messages</h1>
@@ -51,7 +51,7 @@ export default async function ChatPage() {
           <ConversationList conversations={conversations} currentUserId={user.id} />
         </div>
       </div>
-      <div className="flex-1 flex items-center justify-center text-gray-400 bg-gray-50">
+      <div className="hidden md:flex flex-1 items-center justify-center text-gray-400 bg-gray-50">
         <div className="text-center">
           <MessageCircle size={40} className="mx-auto mb-3 opacity-30" />
           <p className="text-sm">Select a conversation</p>

@@ -1,10 +1,11 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import type { RealtimeChannel } from "@supabase/supabase-js"
 import ProfileAvatar from "@/components/ui/ProfileAvatar"
-import { Send } from "lucide-react"
+import { Send, ChevronLeft } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export type ChatMessage = {
@@ -31,6 +32,7 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
   const [isPartnerOnline, setIsPartnerOnline] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
 
+  const router = useRouter()
   const bottomRef = useRef<HTMLDivElement>(null)
   const channelRef = useRef<RealtimeChannel | null>(null)
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -151,6 +153,14 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-white shrink-0">
+        <button
+          type="button"
+          onClick={() => router.push("/dashboard/chat")}
+          className="md:hidden shrink-0 p-2 -ml-1 mr-1 rounded-xl hover:bg-gray-100 text-brand-navy transition-colors"
+          aria-label="Back to messages"
+        >
+          <ChevronLeft size={22} />
+        </button>
         <div className="relative shrink-0">
           <ProfileAvatar avatarUrl={partnerAvatar} fullName={partnerName} size="md" />
           <span
@@ -225,6 +235,7 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
             type="button"
             onClick={handleSend}
             disabled={!input.trim() || sending}
+            aria-label="Send message"
             className="w-10 h-10 bg-brand-navy text-white rounded-xl flex items-center justify-center hover:bg-brand-navy/90 transition-colors disabled:opacity-40 shrink-0"
           >
             <Send size={16} />
