@@ -10,7 +10,6 @@ type Props = {
   participant: PublicProfile
   likeCount: number
   liked: boolean
-  currentUserId: string
 }
 
 export default function ParticipantCard({ participant, likeCount, liked }: Props) {
