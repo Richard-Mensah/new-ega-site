@@ -12,6 +12,7 @@ interface Props {
 
 export default function AvatarUpload({ currentUrl, fullName, onUploaded }: Props) {
   const [preview, setPreview] = useState<string | null>(currentUrl)
+  const [imgFailed, setImgFailed] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -29,6 +30,7 @@ export default function AvatarUpload({ currentUrl, fullName, onUploaded }: Props
     if (!file) return
 
     setError(null)
+    setImgFailed(false)
 
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
       setError("Only JPG, PNG, or WebP images are supported.")
@@ -67,10 +69,12 @@ export default function AvatarUpload({ currentUrl, fullName, onUploaded }: Props
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="relative">
-        {preview ? (
+        {preview && !imgFailed ? (
           <img
+            key={preview}
             src={preview}
             alt={fullName}
+            onError={() => setImgFailed(true)}
             className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
           />
         ) : (
@@ -100,6 +104,7 @@ export default function AvatarUpload({ currentUrl, fullName, onUploaded }: Props
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"
+        aria-label="Upload profile photo"
         className="hidden"
         onChange={handleFile}
       />
