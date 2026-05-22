@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import CommunityGrid from "@/components/features/community/CommunityGrid"
+import CommunityStats from "@/components/features/community/CommunityStats"
+import NewMembersSpotlight from "@/components/features/community/NewMembersSpotlight"
+import Leaderboard from "@/components/features/community/Leaderboard"
 import type { PublicProfile } from "@/types"
 
 export default async function CommunityPage() {
@@ -36,6 +39,24 @@ export default async function CommunityPage() {
     }
   }
 
+  // Derived data for new features
+  const newestMembers = participants.slice(0, 5)
+
+  const uniqueCountries = new Set(
+    participants.map((p) => p.country).filter((c): c is string => c !== null)
+  ).size
+
+  const uniqueSdgs = new Set(
+    participants.flatMap((p) => p.sdg_focus ?? [])
+  ).size
+
+  const totalAppreciations = Object.values(likeCounts).reduce((sum, n) => sum + n, 0)
+
+  const topParticipants = [...participants]
+    .sort((a, b) => (likeCounts[b.id] ?? 0) - (likeCounts[a.id] ?? 0))
+    .slice(0, 5)
+    .filter((p) => (likeCounts[p.id] ?? 0) > 0)
+
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -44,12 +65,32 @@ export default async function CommunityPage() {
           Connect and appreciate fellow EGA participants
         </p>
       </div>
-      <CommunityGrid
-        participants={participants}
-        likeCounts={likeCounts}
-        myLikes={myLikes}
-        currentUserId={user.id}
+
+      <CommunityStats
+        participantCount={participants.length}
+        countryCount={uniqueCountries}
+        sdgCount={uniqueSdgs}
+        appreciationCount={totalAppreciations}
       />
+
+      {newestMembers.length > 0 && <NewMembersSpotlight members={newestMembers} />}
+
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <div className="flex-1 min-w-0">
+          <CommunityGrid
+            participants={participants}
+            likeCounts={likeCounts}
+            myLikes={myLikes}
+            currentUserId={user.id}
+          />
+        </div>
+
+        {topParticipants.length > 0 && (
+          <aside className="w-full lg:w-64 shrink-0">
+            <Leaderboard participants={topParticipants} likeCounts={likeCounts} />
+          </aside>
+        )}
+      </div>
     </div>
   )
 }
