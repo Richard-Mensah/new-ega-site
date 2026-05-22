@@ -19,7 +19,7 @@ export type PublicProfile = {
   bio: string | null
   avatar_url: string | null
   sdg_focus: number[]
-  linkedin_url?: string | null
+  linkedin_url: string | null
   created_at: string
 }
 
