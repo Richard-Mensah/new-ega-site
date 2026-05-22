@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Users } from "lucide-react"
 import Card from "@/components/ui/Card"
+import ProfileAvatar from "@/components/ui/ProfileAvatar"
 
 type OnlineUser = {
   id: string
@@ -13,26 +14,14 @@ interface Props {
 }
 
 function Avatar({ user }: { user: OnlineUser }) {
-  const initials = user.full_name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2)
-
   return (
     <div className="relative" title={user.full_name}>
-      {user.avatar_url ? (
-        <img
-          src={user.avatar_url}
-          alt={user.full_name}
-          className="w-8 h-8 rounded-full object-cover border-2 border-white"
-        />
-      ) : (
-        <div className="w-8 h-8 rounded-full bg-brand-navy border-2 border-white flex items-center justify-center">
-          <span className="text-white text-xs font-bold">{initials}</span>
-        </div>
-      )}
+      <ProfileAvatar
+        avatarUrl={user.avatar_url}
+        fullName={user.full_name}
+        size="sm"
+        className="border-2 border-white"
+      />
       <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border-2 border-white" />
     </div>
   )

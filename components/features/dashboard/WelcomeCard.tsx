@@ -1,10 +1,12 @@
 import Link from "next/link"
 import { Calendar, AlertCircle } from "lucide-react"
+import ProfileAvatar from "@/components/ui/ProfileAvatar"
 
 type Props = {
   name: string
   role: string
   country: string | null
+  organization: string | null
   avatarUrl: string | null
   daysInProgram: number
   profileCompletion: number
@@ -14,6 +16,7 @@ export default function WelcomeCard({
   name,
   role,
   country,
+  organization,
   avatarUrl,
   daysInProgram,
   profileCompletion,
@@ -21,14 +24,7 @@ export default function WelcomeCard({
   const hour = new Date().getHours()
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening"
 
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2)
-
-  const location = [role.charAt(0).toUpperCase() + role.slice(1), country, "EGA Mentorship Program"]
+  const meta = [role.charAt(0).toUpperCase() + role.slice(1), country, "EGA Mentorship Program"]
     .filter(Boolean)
     .join(" · ")
 
@@ -37,21 +33,19 @@ export default function WelcomeCard({
       <div className="flex items-center justify-between gap-4">
         {/* Left: avatar + name */}
         <div className="flex items-center gap-4 min-w-0">
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={name}
-              className="w-14 h-14 rounded-full object-cover border-2 border-brand-gold shrink-0"
-            />
-          ) : (
-            <div className="w-14 h-14 rounded-full bg-brand-gold/20 border-2 border-brand-gold flex items-center justify-center shrink-0">
-              <span className="text-brand-gold text-xl font-bold">{initials}</span>
-            </div>
-          )}
+          <ProfileAvatar
+            avatarUrl={avatarUrl}
+            fullName={name}
+            size="lg"
+            className="border-2 border-brand-gold"
+          />
           <div className="min-w-0">
             <p className="text-white/60 text-xs">{greeting}</p>
             <h1 className="text-xl font-bold mt-0.5 truncate">{name} 👋</h1>
-            <p className="text-white/60 text-xs mt-0.5 truncate">{location}</p>
+            {organization && (
+              <p className="text-brand-gold text-xs font-semibold mt-0.5 truncate">{organization}</p>
+            )}
+            <p className="text-white/50 text-xs mt-0.5 truncate">{meta}</p>
           </div>
         </div>
 

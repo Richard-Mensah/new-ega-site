@@ -77,6 +77,7 @@ export default async function DashboardPage() {
         name={profile?.full_name ?? "Leader"}
         role={profile?.role ?? "participant"}
         country={profile?.country ?? null}
+        organization={profile?.organization ?? null}
         avatarUrl={profile?.avatar_url ?? null}
         daysInProgram={daysInProgram}
         profileCompletion={profileCompletion}

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { SDG_LIST } from "@/lib/constants/sdgs"
 import LikeButton from "@/components/features/community/LikeButton"
+import ProfileAvatar from "@/components/ui/ProfileAvatar"
 import type { Tables } from "@/types/database"
 
 type Profile = Tables<"profiles">
@@ -50,12 +51,6 @@ export default async function CommunityPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {participants.map((p) => {
-            const initials = p.full_name
-              .split(" ")
-              .map((n: string) => n[0])
-              .join("")
-              .slice(0, 2)
-              .toUpperCase()
             const sdgs = (p.sdg_focus ?? []).slice(0, 3)
             const extraSdgs = (p.sdg_focus ?? []).length - 3
 
@@ -65,19 +60,17 @@ export default async function CommunityPage() {
                 className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col gap-3 hover:shadow-sm transition-shadow"
               >
                 <div className="flex items-center gap-3">
-                  {p.avatar_url ? (
-                    <img
-                      src={p.avatar_url}
-                      alt={p.full_name}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-brand-navy flex items-center justify-center text-white font-bold text-sm shrink-0">
-                      {initials}
-                    </div>
-                  )}
+                  <ProfileAvatar
+                    avatarUrl={p.avatar_url}
+                    fullName={p.full_name}
+                    size="md"
+                    className="border-2 border-gray-100"
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-brand-navy truncate">{p.full_name}</p>
+                    {p.organization && (
+                      <p className="text-xs font-semibold text-brand-gold truncate">{p.organization}</p>
+                    )}
                     {p.country && (
                       <p className="text-xs text-gray-400 truncate">{p.country}</p>
                     )}
