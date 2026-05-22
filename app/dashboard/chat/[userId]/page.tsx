@@ -14,7 +14,7 @@ export default async function ChatThreadPage({ params }: { params: Promise<{ use
     supabase.from("profiles").select("id, full_name, avatar_url").eq("id", partnerId).single(),
     supabase
       .from("messages")
-      .select("id, sender_id, recipient_id, content, read_at, created_at")
+      .select("id, sender_id, recipient_id, content, read_at, created_at, attachment_url, attachment_type, attachment_name")
       .or(`and(sender_id.eq.${user.id},recipient_id.eq.${partnerId}),and(sender_id.eq.${partnerId},recipient_id.eq.${user.id})`)
       .order("created_at", { ascending: true })
       .limit(200),

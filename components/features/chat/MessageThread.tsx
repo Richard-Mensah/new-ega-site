@@ -348,7 +348,7 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
                   />
                 )}
                 {msg.attachment_type === "audio" && msg.attachment_url && (
-                  <audio controls muted preload="none" src={msg.attachment_url} className="max-w-full mb-1" />
+                  <audio controls preload="none" src={msg.attachment_url} className="max-w-full mb-1" />
                 )}
                 {msg.attachment_type === "file" && msg.attachment_url && (
                   <a
