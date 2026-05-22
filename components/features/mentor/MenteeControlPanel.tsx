@@ -5,7 +5,8 @@ import ProfileAvatar from "@/components/ui/ProfileAvatar"
 import Badge from "@/components/ui/Badge"
 import MilestoneEditor from "@/components/features/mentor/MilestoneEditor"
 import IssueAwardModal, { type Award } from "@/components/features/mentor/IssueAwardModal"
-import { MapPin, Building2, ExternalLink, ChevronDown, ChevronUp, Award as AwardIcon, Globe, Folder, Calendar, X } from "lucide-react"
+import Link from "next/link"
+import { MapPin, Building2, ExternalLink, ChevronDown, ChevronUp, Award as AwardIcon, Globe, Folder, Calendar, X, MessageCircle } from "lucide-react"
 import Card from "@/components/ui/Card"
 
 const CATEGORY_META: Record<string, { label: string; color: string; textColor: string }> = {
@@ -106,6 +107,19 @@ export default function MenteeControlPanel({ mentees: initial }: Props) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Link
+                    href={`/dashboard/chat/${mentee.id}`}
+                    className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-navy text-white text-xs font-semibold hover:bg-brand-navy/90 transition-colors"
+                  >
+                    <MessageCircle size={13} />
+                    Message
+                  </Link>
+                  <Link
+                    href={`/dashboard/community/${mentee.id}`}
+                    className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 text-brand-navy text-xs font-semibold hover:bg-gray-200 transition-colors"
+                  >
+                    View Profile
+                  </Link>
                   <button
                     type="button"
                     onClick={() => setAwardModal(mentee.id)}

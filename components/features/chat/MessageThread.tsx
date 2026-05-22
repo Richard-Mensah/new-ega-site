@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
+import type { RealtimeChannel } from "@supabase/supabase-js"
 import ProfileAvatar from "@/components/ui/ProfileAvatar"
 import { Send } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -27,14 +28,16 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
   const [input, setInput] = useState("")
   const [sending, setSending] = useState(false)
+  const [isPartnerOnline, setIsPartnerOnline] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
+
   const bottomRef = useRef<HTMLDivElement>(null)
+  const channelRef = useRef<RealtimeChannel | null>(null)
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastTypingRef = useRef(0)
   const supabase = createClient()
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
-
-  useEffect(() => {
+  const markRead = useCallback(() => {
     fetch("/api/messages/read", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -43,32 +46,68 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
   }, [partnerId])
 
   useEffect(() => {
-    const channel = supabase
-      .channel(`chat:${currentUserId}:${partnerId}`)
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
+
+  // Mark current thread as read on mount
+  useEffect(() => { markRead() }, [markRead])
+
+  useEffect(() => {
+    const channelId = [currentUserId, partnerId].sort().join("-")
+    const ch = supabase.channel(`dm:${channelId}`)
+
+    ch
+      // --- Presence: online dot ---
+      .on("presence", { event: "sync" }, () => {
+        const state = ch.presenceState<{ userId: string }>()
+        const online = Object.values(state)
+          .flat()
+          .some((p) => (p as { userId: string }).userId === partnerId)
+        setIsPartnerOnline(online)
+      })
+      // --- Broadcast: fast incoming message ---
+      .on("broadcast", { event: "new_message" }, ({ payload }) => {
+        if (payload.sender_id !== partnerId) return
+        setMessages((prev) =>
+          prev.some((m) => m.id === payload.id) ? prev : [...prev, payload as ChatMessage]
+        )
+        markRead()
+      })
+      // --- Broadcast: typing indicator ---
+      .on("broadcast", { event: "typing" }, ({ payload }) => {
+        if (payload.userId !== partnerId) return
+        setIsTyping(true)
+        if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+        typingTimerRef.current = setTimeout(() => setIsTyping(false), 2000)
+      })
+      // --- postgres_changes: fallback for multi-device ---
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `recipient_id=eq.${currentUserId}`,
-        },
+        { event: "INSERT", schema: "public", table: "messages", filter: `recipient_id=eq.${currentUserId}` },
         (payload) => {
           const msg = payload.new as ChatMessage
-          if (msg.sender_id === partnerId) {
-            setMessages((prev) => [...prev, msg])
-            fetch("/api/messages/read", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ sender_id: partnerId }),
-            })
-          }
+          if (msg.sender_id !== partnerId) return
+          setMessages((prev) =>
+            prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
+          )
+          markRead()
         }
       )
-      .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
-  }, [supabase, currentUserId, partnerId])
+    ch.subscribe(async (status) => {
+      if (status === "SUBSCRIBED") {
+        await ch.track({ userId: currentUserId })
+      }
+    })
+
+    channelRef.current = ch
+
+    return () => {
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+      supabase.removeChannel(ch)
+      channelRef.current = null
+    }
+  }, [supabase, currentUserId, partnerId, markRead])
 
   async function handleSend() {
     const text = input.trim()
@@ -84,9 +123,20 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
       if (res.ok) {
         const msg = await res.json() as ChatMessage
         setMessages((prev) => [...prev, msg])
+        // Broadcast for instant delivery on recipient's side
+        channelRef.current?.send({ type: "broadcast", event: "new_message", payload: msg })
       }
     } finally {
       setSending(false)
+    }
+  }
+
+  function handleInputChange(val: string) {
+    setInput(val)
+    const now = Date.now()
+    if (now - lastTypingRef.current > 1000) {
+      lastTypingRef.current = now
+      channelRef.current?.send({ type: "broadcast", event: "typing", payload: { userId: currentUserId } })
     }
   }
 
@@ -101,8 +151,27 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-white shrink-0">
-        <ProfileAvatar avatarUrl={partnerAvatar} fullName={partnerName} size="md" />
-        <p className="font-bold text-brand-navy">{partnerName}</p>
+        <div className="relative shrink-0">
+          <ProfileAvatar avatarUrl={partnerAvatar} fullName={partnerName} size="md" />
+          <span
+            className={cn(
+              "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white",
+              isPartnerOnline ? "bg-green-400" : "bg-gray-300"
+            )}
+          />
+        </div>
+        <div>
+          <p className="font-bold text-brand-navy leading-tight">{partnerName}</p>
+          <p className="text-xs text-gray-400">
+            {isTyping ? (
+              <span className="text-brand-navy italic">typing…</span>
+            ) : isPartnerOnline ? (
+              <span className="text-green-500">Online</span>
+            ) : (
+              "Offline"
+            )}
+          </p>
+        </div>
       </div>
 
       {/* Messages */}
@@ -147,7 +216,7 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
           <textarea
             rows={1}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={`Message ${partnerName}…`}
             className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy/30 focus:border-brand-navy max-h-32"
