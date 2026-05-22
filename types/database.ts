@@ -54,6 +54,7 @@ export type Database = {
           participant_id: string
           matched_at: string
           status: string
+          notes: string | null
         }
         Insert: {
           id?: string
@@ -61,8 +62,9 @@ export type Database = {
           participant_id: string
           matched_at?: string
           status?: string
+          notes?: string | null
         }
-        Update: { status?: string }
+        Update: { status?: string; notes?: string | null }
         Relationships: []
       }
       sessions: {

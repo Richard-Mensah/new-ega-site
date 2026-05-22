@@ -5,12 +5,13 @@ import { useState } from "react"
 interface Props {
   avatarUrl: string | null
   fullName: string
-  size?: "sm" | "md" | "lg" | "xl"
+  size?: "xs" | "sm" | "md" | "lg" | "xl"
   className?: string
 }
 
 const SIZES = {
-  sm:  { outer: "w-8 h-8",  text: "text-xs" },
+  xs:  { outer: "w-6 h-6",   text: "text-[10px]" },
+  sm:  { outer: "w-8 h-8",   text: "text-xs" },
   md:  { outer: "w-12 h-12", text: "text-sm" },
   lg:  { outer: "w-14 h-14", text: "text-base" },
   xl:  { outer: "w-20 h-20", text: "text-xl" },
