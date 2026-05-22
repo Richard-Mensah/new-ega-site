@@ -1,7 +1,6 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { Camera, Loader2 } from "lucide-react"
 
 interface Props {
@@ -11,7 +10,7 @@ interface Props {
   onUploaded: (url: string) => void
 }
 
-export default function AvatarUpload({ userId, currentUrl, fullName, onUploaded }: Props) {
+export default function AvatarUpload({ currentUrl, fullName, onUploaded }: Props) {
   const [preview, setPreview] = useState<string | null>(currentUrl)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -19,6 +18,7 @@ export default function AvatarUpload({ userId, currentUrl, fullName, onUploaded 
 
   const initials = fullName
     .split(" ")
+    .filter(Boolean)
     .map((n) => n[0])
     .join("")
     .toUpperCase()
@@ -30,8 +30,7 @@ export default function AvatarUpload({ userId, currentUrl, fullName, onUploaded 
 
     setError(null)
 
-    const allowed = ["image/jpeg", "image/png", "image/webp"]
-    if (!allowed.includes(file.type)) {
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
       setError("Only JPG, PNG, or WebP images are supported.")
       return
     }
@@ -40,28 +39,24 @@ export default function AvatarUpload({ userId, currentUrl, fullName, onUploaded 
       return
     }
 
-    const objectUrl = URL.createObjectURL(file)
-    setPreview(objectUrl)
+    // Show local preview immediately
+    setPreview(URL.createObjectURL(file))
     setUploading(true)
 
     try {
-      const supabase = createClient()
-      const path = `${userId}/avatar.jpg`
+      const body = new FormData()
+      body.append("file", file)
 
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(path, file, { upsert: true, contentType: file.type })
+      const res = await fetch("/api/profile/avatar", { method: "POST", body })
+      const json = await res.json()
 
-      if (uploadError) throw uploadError
+      if (!res.ok) {
+        throw new Error(json.error ?? "Upload failed")
+      }
 
-      const { data } = supabase.storage.from("avatars").getPublicUrl(path)
-      const publicUrl = `${data.publicUrl}?t=${Date.now()}`
-
-      await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId)
-
-      onUploaded(publicUrl)
-    } catch {
-      setError("Upload failed. Please try again.")
+      onUploaded(json.url)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed. Please try again.")
       setPreview(currentUrl)
     } finally {
       setUploading(false)
@@ -109,7 +104,7 @@ export default function AvatarUpload({ userId, currentUrl, fullName, onUploaded 
         onChange={handleFile}
       />
 
-      {error && <p className="text-xs text-red-500 text-center">{error}</p>}
+      {error && <p className="text-xs text-red-500 text-center max-w-48">{error}</p>}
 
       <p className="text-xs text-gray-400">JPG, PNG or WebP · max 2 MB</p>
     </div>
