@@ -43,6 +43,7 @@ export default function AppreciateButton({ profileId, initialCount, initialLiked
   return (
     <button
       onClick={toggle}
+      aria-label={liked ? "Remove appreciation" : "Appreciate this profile"}
       className={`group flex flex-col items-center justify-center gap-1 px-6 py-4 rounded-2xl border-2 transition-all duration-200 ${
         liked
           ? "bg-brand-gold border-brand-gold text-white"
