@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import type { RealtimeChannel } from "@supabase/supabase-js"
@@ -39,6 +39,7 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
   const [recordingSecs, setRecordingSecs] = useState(0)
   // Recorded audio waiting to be reviewed/sent
   const [pendingAudio, setPendingAudio] = useState<{ blob: Blob; url: string; name: string } | null>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   const router = useRouter()
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -49,7 +50,9 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const supabase = createClient()
+  // Create Supabase client once — recreating it every render causes the realtime channel to
+  // disconnect and reconnect on every state update, losing messages mid-send.
+  const supabase = useMemo(() => createClient(), [])
 
   const markRead = useCallback(() => {
     fetch("/api/messages/read", {
@@ -158,10 +161,17 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
 
   async function uploadFile(file: File, type: "image" | "audio" | "file") {
     setUploading(true)
+    setUploadError(null)
     try {
       const path = `${currentUserId}/${Date.now()}-${file.name}`
       const { data, error } = await supabase.storage.from("chat-attachments").upload(path, file)
-      if (error || !data) return
+      if (error) {
+        setUploadError(error.message.includes("Bucket not found")
+          ? "Storage not configured — ask the admin to set up the chat-attachments bucket."
+          : `Upload failed: ${error.message}`)
+        return
+      }
+      if (!data) return
       const { data: urlData } = supabase.storage.from("chat-attachments").getPublicUrl(data.path)
       return { url: urlData.publicUrl, name: file.name }
     } finally {
@@ -338,7 +348,7 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
                   />
                 )}
                 {msg.attachment_type === "audio" && msg.attachment_url && (
-                  <audio controls src={msg.attachment_url} className="max-w-full mb-1" />
+                  <audio controls muted preload="none" src={msg.attachment_url} className="max-w-full mb-1" />
                 )}
                 {msg.attachment_type === "file" && msg.attachment_url && (
                   <a
@@ -367,6 +377,12 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
 
       {/* Input */}
       <div className="shrink-0 px-4 py-3 border-t border-gray-100 bg-white">
+        {uploadError && (
+          <div className="mb-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-xs text-red-600">
+            <span className="flex-1">{uploadError}</span>
+            <button type="button" onClick={() => setUploadError(null)} className="shrink-0 font-bold hover:text-red-800">✕</button>
+          </div>
+        )}
         {/* === RECORDING in progress === */}
         {isRecording && (
           <div className="flex items-center gap-3">
