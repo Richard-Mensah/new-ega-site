@@ -20,10 +20,23 @@ export type PairRow = {
   sessionCount: number
 }
 
+type MentorRequestRow = {
+  id: string
+  participant_id: string
+  participant_name: string
+  participant_avatar: string | null
+  participant_organization: string | null
+  participant_country: string | null
+  message: string
+  focus_areas: string[]
+  created_at: string
+}
+
 type Props = {
   pairs: PairRow[]
   mentors: MentorOption[]
   allParticipants: Array<{ id: string; full_name: string; avatar_url: string | null; organization: string | null; country: string | null }>
+  pendingRequests?: MentorRequestRow[]
 }
 
 const STATUS_OPTIONS = ["active", "paused", "completed"] as const
@@ -34,7 +47,7 @@ function statusBadge(status: string) {
   return "bg-gray-100 text-gray-500 border-gray-200"
 }
 
-export default function PairingTable({ pairs: initial, mentors, allParticipants }: Props) {
+export default function PairingTable({ pairs: initial, mentors, allParticipants, pendingRequests = [] }: Props) {
   const [list, setList] = useState(initial)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -122,6 +135,62 @@ export default function PairingTable({ pairs: initial, mentors, allParticipants 
 
   return (
     <>
+      {pendingRequests.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold text-amber-800">Mentor Requests</h3>
+            <span className="text-xs font-bold bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full">
+              {pendingRequests.length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {pendingRequests.map((req) => (
+              <div
+                key={req.id}
+                className="bg-white rounded-xl border border-amber-100 p-3 flex items-start gap-3"
+              >
+                <ProfileAvatar
+                  avatarUrl={req.participant_avatar}
+                  fullName={req.participant_name}
+                  size="sm"
+                  className="shrink-0 mt-0.5"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{req.participant_name}</p>
+                  {(req.participant_organization || req.participant_country) && (
+                    <p className="text-xs text-gray-400 truncate">
+                      {[req.participant_organization, req.participant_country].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
+                  {req.focus_areas.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {req.focus_areas.map((fa) => (
+                        <span
+                          key={fa}
+                          className="text-[10px] font-medium bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full"
+                        >
+                          {fa}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1 line-clamp-1">{req.message}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">
+                    Submitted {new Date(req.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAddParticipantId(req.participant_id)}
+                  className="shrink-0 px-3 py-1.5 text-xs font-semibold text-white bg-brand-navy rounded-lg hover:bg-brand-navy/90 transition-colors"
+                >
+                  Pair Now
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="space-y-4">
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex-1 relative min-w-60">

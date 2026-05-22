@@ -4,6 +4,18 @@ import { redirect } from "next/navigation"
 import PairingTable, { type PairRow } from "@/components/features/admin/PairingTable"
 import type { MentorOption } from "@/components/features/admin/AssignMentorModal"
 
+export type MentorRequestRow = {
+  id: string
+  participant_id: string
+  participant_name: string
+  participant_avatar: string | null
+  participant_organization: string | null
+  participant_country: string | null
+  message: string
+  focus_areas: string[]
+  created_at: string
+}
+
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "rmensahuk@gmail.com")
   .split(",")
   .map((e) => e.trim())
@@ -23,6 +35,7 @@ export default async function PairingsPage() {
     { data: authData },
     { data: sessions },
     { data: pairCounts },
+    { data: requestsRaw },
   ] = await Promise.all([
     admin
       .from("mentorship_pairs")
@@ -32,6 +45,11 @@ export default async function PairingsPage() {
     admin.auth.admin.listUsers({ perPage: 1000 }),
     admin.from("sessions").select("mentor_id,participant_id"),
     admin.from("mentorship_pairs").select("mentor_id").eq("status", "active"),
+    admin
+      .from("mentor_requests")
+      .select("id, participant_id, message, focus_areas, status, created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true }),
   ])
 
   const profileMap = new Map((allProfiles ?? []).map((p) => [p.id, p]))
@@ -91,12 +109,32 @@ export default async function PairingsPage() {
 
   const activePairs = pairRows.filter((p) => p.status === "active").length
 
+  const pendingRequests: MentorRequestRow[] = (requestsRaw ?? []).map((r) => {
+    const p = profileMap.get(r.participant_id)
+    return {
+      id: r.id,
+      participant_id: r.participant_id,
+      participant_name: p?.full_name ?? "Unknown",
+      participant_avatar: p?.avatar_url ?? null,
+      participant_organization: p?.organization ?? null,
+      participant_country: p?.country ?? null,
+      message: r.message,
+      focus_areas: r.focus_areas ?? [],
+      created_at: r.created_at,
+    }
+  })
+
   return (
     <div className="space-y-4">
       <p className="text-gray-500 text-sm">
         {pairRows.length} total pairings · {activePairs} active
+        {pendingRequests.length > 0 && (
+          <span className="ml-2 inline-flex items-center gap-1 text-amber-600 font-medium">
+            · {pendingRequests.length} mentor request{pendingRequests.length !== 1 ? "s" : ""} pending
+          </span>
+        )}
       </p>
-      <PairingTable pairs={pairRows} mentors={mentors} allParticipants={allParticipants} />
+      <PairingTable pairs={pairRows} mentors={mentors} allParticipants={allParticipants} pendingRequests={pendingRequests} />
     </div>
   )
 }

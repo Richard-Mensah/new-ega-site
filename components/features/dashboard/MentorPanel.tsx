@@ -12,10 +12,16 @@ export default function MentorPanel({ mentor }: Props) {
     return (
       <Card>
         <h3 className="font-bold text-brand-navy mb-4">Your Mentor</h3>
-        <div className="text-center py-8 text-gray-400">
+        <div className="text-center py-6">
           <div className="text-4xl mb-2">👤</div>
-          <p className="text-sm">Mentor assignment in progress</p>
-          <p className="text-xs mt-1">You&apos;ll be matched with a mentor soon</p>
+          <p className="text-sm font-medium text-brand-navy">No mentor assigned yet</p>
+          <p className="text-xs text-gray-400 mt-1 mb-4">Go to your Mentor page to request support</p>
+          <Link
+            href="/dashboard/mentor"
+            className="text-xs font-semibold text-brand-gold hover:underline"
+          >
+            Request a mentor →
+          </Link>
         </div>
       </Card>
     )

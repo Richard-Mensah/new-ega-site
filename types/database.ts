@@ -323,6 +323,31 @@ export type Database = {
         }
         Relationships: []
       }
+      mentor_requests: {
+        Row: {
+          id: string
+          participant_id: string
+          message: string
+          focus_areas: string[]
+          status: string
+          admin_note: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          participant_id: string
+          message: string
+          focus_areas?: string[]
+          status?: string
+          admin_note?: string | null
+          created_at?: string
+        }
+        Update: {
+          status?: string
+          admin_note?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>

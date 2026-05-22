@@ -5,6 +5,7 @@ import Badge from "@/components/ui/Badge"
 import ProfileAvatar from "@/components/ui/ProfileAvatar"
 import { MapPin, Calendar, MessageCircle, ExternalLink, Building2, Award, Star, Globe, MessageSquare, Folder, TrendingUp } from "lucide-react"
 import type { Tables } from "@/types/database"
+import MentorRequestSection from "@/components/features/mentor/MentorRequestSection"
 
 const AWARD_META: Record<string, { label: string; Icon: React.ElementType; bg: string; border: string; text: string }> = {
   leadership: { label: "Leadership Excellence", Icon: Star, bg: "bg-amber-50", border: "border-amber-300", text: "text-amber-700" },
@@ -19,7 +20,7 @@ export default async function MentorPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login")
 
-  const [{ data: pairRaw }, { data: sessionsRaw }, { data: awardsRaw }] = await Promise.all([
+  const [{ data: pairRaw }, { data: sessionsRaw }, { data: awardsRaw }, { data: requestRaw }] = await Promise.all([
     supabase
       .from("mentorship_pairs")
       .select("mentor_id, profiles!mentor_id(full_name, country, bio, avatar_url, organization, linkedin_url)")
@@ -31,12 +32,19 @@ export default async function MentorPage() {
       .select("*")
       .eq("participant_id", user.id)
       .order("scheduled_at", { ascending: false })
-      .limit(5),
+      .limit(20),
     supabase
       .from("mentor_awards")
       .select("*, mentor:profiles!mentor_id(full_name)")
       .eq("participant_id", user.id)
       .order("awarded_at", { ascending: false }),
+    supabase
+      .from("mentor_requests")
+      .select("id, status, admin_note, created_at, focus_areas")
+      .eq("participant_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ])
 
   type MentorProfile = { full_name: string; country: string | null; bio: string | null; avatar_url: string | null; organization: string | null; linkedin_url: string | null }
@@ -44,8 +52,24 @@ export default async function MentorPage() {
   const sessions = sessionsRaw as Tables<"sessions">[] | null
   type AwardWithMentor = { id: string; category: string; title: string; notes: string | null; awarded_at: string; mentor: { full_name: string } | null }
   const awards = (awardsRaw ?? []) as AwardWithMentor[]
+  type MentorRequest = { id: string; status: string; admin_note: string | null; created_at: string; focus_areas: string[] | null }
+  const latestRequest = requestRaw as MentorRequest | null
 
   const mentor = pair?.profiles ?? null
+
+  const requestStatus: "none" | "pending" | "declined" =
+    latestRequest?.status === "pending" ? "pending"
+    : latestRequest?.status === "declined" ? "declined"
+    : "none"
+
+  const now = new Date()
+  const upcoming = (sessions ?? []).filter(
+    (s) => s.status === "scheduled" && s.scheduled_at && new Date(s.scheduled_at) > now
+  ).sort((a, b) => new Date(a.scheduled_at!).getTime() - new Date(b.scheduled_at!).getTime())
+
+  const pastSessions = (sessions ?? []).filter(
+    (s) => s.status !== "scheduled" || !s.scheduled_at || new Date(s.scheduled_at) <= now
+  )
 
   return (
     <div className="p-6 space-y-6">
@@ -55,15 +79,12 @@ export default async function MentorPage() {
       </div>
 
       {!mentor ? (
-        <Card>
-          <div className="text-center py-12">
-            <div className="text-5xl mb-4">👤</div>
-            <p className="font-medium text-brand-navy">Mentor assignment in progress</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Our team is carefully matching you with the right mentor. You&apos;ll be notified once matched.
-            </p>
-          </div>
-        </Card>
+        <MentorRequestSection
+          status={requestStatus}
+          adminNote={latestRequest?.admin_note}
+          submittedAt={latestRequest?.created_at}
+          focusAreas={latestRequest?.focus_areas}
+        />
       ) : (
         <Card accent="gold">
           <div className="flex items-start gap-6">
@@ -99,7 +120,6 @@ export default async function MentorPage() {
         </Card>
       )}
 
-      {/* EGA Awards */}
       <div>
         <h2 className="text-lg font-bold text-brand-navy mb-4 flex items-center gap-2">
           <Award size={18} className="text-brand-gold" />
@@ -140,10 +160,34 @@ export default async function MentorPage() {
         )}
       </div>
 
-      {/* Session History */}
+      {upcoming.length > 0 && (
+        <div>
+          <h2 className="text-lg font-bold text-brand-navy mb-4 flex items-center gap-2">
+            <Calendar size={18} className="text-green-600" />
+            Next Session
+          </h2>
+          <div className="space-y-3">
+            {upcoming.map((s) => (
+              <div key={s.id} className="flex items-center gap-4 bg-green-50 border-2 border-green-200 rounded-xl p-4">
+                <div className="p-2 bg-green-100 rounded-lg shrink-0">
+                  <Calendar size={16} className="text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-green-800 text-sm">
+                    {new Date(s.scheduled_at!).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                  </p>
+                  {s.notes && <p className="text-xs text-green-700 mt-0.5">{s.notes}</p>}
+                </div>
+                <Badge label="Upcoming" color="green" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div>
         <h2 className="text-lg font-bold text-brand-navy mb-4">Session History</h2>
-        {!sessions || sessions.length === 0 ? (
+        {pastSessions.length === 0 ? (
           <Card>
             <div className="text-center py-8 text-gray-400">
               <Calendar size={32} className="mx-auto mb-2" />
@@ -152,7 +196,7 @@ export default async function MentorPage() {
           </Card>
         ) : (
           <div className="space-y-3">
-            {sessions.map((s) => (
+            {pastSessions.map((s) => (
               <div key={s.id} className="flex items-center gap-4 bg-white rounded-xl p-4 border border-gray-100">
                 <div className="p-2 bg-brand-navy/5 rounded-lg">
                   <Calendar size={16} className="text-brand-navy" />
@@ -171,13 +215,40 @@ export default async function MentorPage() {
       </div>
 
       {mentor && (
-        <Card>
-          <div className="flex items-center gap-2 mb-2">
+        <div>
+          <h2 className="text-lg font-bold text-brand-navy mb-4 flex items-center gap-2">
             <MessageCircle size={18} className="text-brand-gold" />
-            <h3 className="font-bold text-brand-navy">Feedback Log</h3>
-          </div>
-          <p className="text-sm text-gray-500">Session notes and mentor feedback will appear here after each session.</p>
-        </Card>
+            Feedback Log
+          </h2>
+          {(() => {
+            const notedSessions = (sessions ?? [])
+              .filter((s) => s.notes && s.notes.trim().length > 0 && s.status === "completed")
+              .slice(0, 3)
+            if (notedSessions.length === 0) {
+              return (
+                <Card>
+                  <div className="text-center py-8 text-gray-400">
+                    <MessageCircle size={28} className="mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">No feedback recorded yet</p>
+                    <p className="text-xs mt-1">Notes from completed sessions will appear here</p>
+                  </div>
+                </Card>
+              )
+            }
+            return (
+              <div className="space-y-3">
+                {notedSessions.map((s) => (
+                  <div key={s.id} className="bg-white rounded-xl border border-gray-100 p-4">
+                    <p className="text-xs text-gray-400 mb-1.5">
+                      {s.scheduled_at ? new Date(s.scheduled_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "Session"}
+                    </p>
+                    <p className="text-sm text-gray-700 leading-relaxed">{s.notes}</p>
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
+        </div>
       )}
     </div>
   )
