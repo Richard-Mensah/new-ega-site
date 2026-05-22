@@ -22,24 +22,31 @@ export async function POST(request: NextRequest) {
     const bytes = new Uint8Array(await file.arrayBuffer())
     const path = `${user.id}/avatar.jpg`
 
+    // Upload to storage
     const { error: uploadError } = await supabase.storage
       .from("avatars")
       .upload(path, bytes, { upsert: true, contentType: file.type })
 
     if (uploadError) {
-      return NextResponse.json({ error: uploadError.message }, { status: 500 })
+      return NextResponse.json({ error: `Storage upload failed: ${uploadError.message}` }, { status: 500 })
     }
 
+    // Build public URL with cache-bust
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
     const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`
 
-    const { error: updateError } = await supabase
+    // Update profiles — use .select().single() so a silent RLS block surfaces as an error
+    const { data: updated, error: updateError } = await supabase
       .from("profiles")
       .update({ avatar_url: publicUrl })
       .eq("id", user.id)
+      .select("avatar_url")
+      .single()
 
-    if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
+    if (updateError || !updated) {
+      return NextResponse.json({
+        error: updateError?.message ?? "Profile update was blocked. Run the profiles UPDATE policy SQL in Supabase.",
+      }, { status: 500 })
     }
 
     return NextResponse.json({ url: publicUrl })
