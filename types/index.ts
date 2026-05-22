@@ -60,6 +60,8 @@ export type PortfolioItem = {
   participant_id: string
   type: "article" | "project" | "certificate" | "video"
   title: string
+  description: string | null
+  tags: string[]
   content_url: string | null
   published: boolean
   created_at: string

@@ -163,6 +163,8 @@ export type Database = {
           participant_id: string
           type: string
           title: string
+          description: string | null
+          tags: string[]
           content_url: string | null
           published: boolean
           created_at: string
@@ -172,12 +174,17 @@ export type Database = {
           participant_id: string
           type: string
           title: string
+          description?: string | null
+          tags?: string[]
           content_url?: string | null
           published?: boolean
           created_at?: string
         }
         Update: {
+          type?: string
           title?: string
+          description?: string | null
+          tags?: string[]
           content_url?: string | null
           published?: boolean
         }
