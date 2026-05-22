@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import type { RealtimeChannel } from "@supabase/supabase-js"
 import ProfileAvatar from "@/components/ui/ProfileAvatar"
-import { Send, ChevronLeft, Paperclip, Mic, MicOff, File as FileIcon, X } from "lucide-react"
+import { Send, ChevronLeft, Paperclip, Mic, MicOff, File as FileIcon, X, CheckCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export type ChatMessage = {
@@ -110,6 +110,18 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
             prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
           )
           markRead()
+        }
+      )
+      // When the recipient reads our messages, read_at gets set — update ticks to blue
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages", filter: `sender_id=eq.${currentUserId}` },
+        (payload) => {
+          const updated = payload.new as ChatMessage
+          if (updated.recipient_id !== partnerId || !updated.read_at) return
+          setMessages((prev) =>
+            prev.map((m) => m.id === updated.id ? { ...m, read_at: updated.read_at } : m)
+          )
         }
       )
 
@@ -365,8 +377,14 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
                   </a>
                 )}
                 {msg.content && <p>{msg.content}</p>}
-                <p className={cn("text-[10px] mt-1 text-right", isMe ? "text-white/60" : "text-gray-400")}>
-                  {new Date(msg.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                <p className={cn("text-[10px] mt-1 flex items-center justify-end gap-0.5", isMe ? "text-white/60" : "text-gray-400")}>
+                  <span>{new Date(msg.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</span>
+                  {isMe && (
+                    <CheckCheck
+                      size={13}
+                      className={msg.read_at ? "text-blue-400" : "text-white/40"}
+                    />
+                  )}
                 </p>
               </div>
             </div>
