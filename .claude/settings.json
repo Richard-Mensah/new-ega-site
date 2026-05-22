@@ -33,7 +33,10 @@
       "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('@hookform/resolvers:', p.dependencies['@hookform/resolvers'] || p.devDependencies['@hookform/resolvers']\\); console.log\\('react-hook-form:', p.dependencies['react-hook-form'] || p.devDependencies['react-hook-form']\\); console.log\\('zod:', p.dependencies['zod'] || p.devDependencies['zod']\\)\")",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\" -Force)",
       "Bash(mkdir -p \"c:/Users/joe/Documents/GitHub/new-ega-site/app/api/learning/complete\" && mkdir -p \"c:/Users/joe/Documents/GitHub/new-ega-site/app/dashboard/learning/[moduleId]\" && mkdir -p \"c:/Users/joe/Documents/GitHub/new-ega-site/components/features/learning\")",
-      "Bash(Get-ChildItem \"c:/Users/joe/Documents/GitHub/new-ega-site/lib/constants/\")"
+      "Bash(Get-ChildItem \"c:/Users/joe/Documents/GitHub/new-ega-site/lib/constants/\")",
+      "PowerShell(git add app/api/profile/avatar/route.ts)",
+      "PowerShell(git commit -m \"fix: surface silent RLS block on profiles avatar_url update`n`nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\")",
+      "PowerShell(git push origin master)"
     ],
     "additionalDirectories": [
       "c:\\Users\\joe\\Documents\\GitHub\\new-ega-site\\node_modules\\next",
