@@ -43,7 +43,7 @@ export default function AppreciateButton({ profileId, initialCount, initialLiked
   return (
     <button
       onClick={toggle}
-      className={`flex flex-col items-center justify-center gap-1 px-6 py-4 rounded-2xl border-2 transition-all duration-200 ${
+      className={`group flex flex-col items-center justify-center gap-1 px-6 py-4 rounded-2xl border-2 transition-all duration-200 ${
         liked
           ? "bg-brand-gold border-brand-gold text-white"
           : "bg-transparent border-brand-gold text-brand-gold hover:bg-brand-gold/10"
@@ -52,7 +52,7 @@ export default function AppreciateButton({ profileId, initialCount, initialLiked
       <Heart
         size={28}
         fill={liked ? "currentColor" : "none"}
-        className="transition-transform duration-200 group-hover:scale-110 hover:scale-110"
+        className="transition-transform duration-200 group-hover:scale-110"
       />
       <span className="text-xl font-bold leading-none">{count}</span>
       <span className="text-xs font-medium uppercase tracking-wide leading-none">Appreciations</span>
