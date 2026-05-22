@@ -11,6 +11,28 @@ export type Profile = {
   created_at: string
 }
 
+export type PublicProfile = {
+  id: string
+  full_name: string
+  country: string | null
+  organization: string | null
+  bio: string | null
+  avatar_url: string | null
+  sdg_focus: number[]
+  linkedin_url?: string | null
+  created_at: string
+}
+
+export type MentorAward = {
+  id: string
+  mentor_id: string
+  participant_id: string
+  category: "leadership" | "sdg_engagement" | "communication" | "projects" | "overall"
+  title: string
+  notes: string | null
+  awarded_at: string
+}
+
 export type MentorshipPair = {
   id: string
   mentor_id: string
