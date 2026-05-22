@@ -5,7 +5,7 @@ import ProfileAvatar from "@/components/ui/ProfileAvatar"
 import Badge from "@/components/ui/Badge"
 import MilestoneEditor from "@/components/features/mentor/MilestoneEditor"
 import IssueAwardModal, { type Award } from "@/components/features/mentor/IssueAwardModal"
-import { MapPin, Building2, Linkedin, ChevronDown, ChevronUp, Award as AwardIcon, Globe, Folder, Calendar, X } from "lucide-react"
+import { MapPin, Building2, ExternalLink, ChevronDown, ChevronUp, Award as AwardIcon, Globe, Folder, Calendar, X } from "lucide-react"
 import Card from "@/components/ui/Card"
 
 const CATEGORY_META: Record<string, { label: string; color: string; textColor: string }> = {
@@ -134,7 +134,7 @@ export default function MenteeControlPanel({ mentees: initial }: Props) {
                       {mentee.linkedin_url && (
                         <a href={mentee.linkedin_url} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 text-sm text-[#0A66C2] font-medium hover:underline">
-                          <Linkedin size={14} />LinkedIn Profile
+                          <ExternalLink size={14} />LinkedIn Profile
                         </a>
                       )}
                       <div className="grid grid-cols-2 gap-3">
@@ -193,6 +193,7 @@ export default function MenteeControlPanel({ mentees: initial }: Props) {
                                 type="button"
                                 onClick={() => handleRevoke(mentee.id, award.id)}
                                 disabled={revoking === award.id}
+                                aria-label="Revoke award"
                                 className="ml-1 opacity-60 hover:opacity-100 transition-opacity"
                               >
                                 <X size={11} />

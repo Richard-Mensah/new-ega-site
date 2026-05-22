@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import Card from "@/components/ui/Card"
 import Badge from "@/components/ui/Badge"
 import ProfileAvatar from "@/components/ui/ProfileAvatar"
-import { MapPin, Calendar, MessageCircle, Linkedin, Building2, Award, Star, Globe, MessageSquare, Folder, TrendingUp } from "lucide-react"
+import { MapPin, Calendar, MessageCircle, ExternalLink, Building2, Award, Star, Globe, MessageSquare, Folder, TrendingUp } from "lucide-react"
 import type { Tables } from "@/types/database"
 
 const AWARD_META: Record<string, { label: string; Icon: React.ElementType; bg: string; border: string; text: string }> = {
@@ -91,7 +91,7 @@ export default async function MentorPage() {
               {mentor.linkedin_url && (
                 <a href={mentor.linkedin_url} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-[#0A66C2] hover:underline">
-                  <Linkedin size={15} />View LinkedIn Profile
+                  <ExternalLink size={15} />View LinkedIn Profile
                 </a>
               )}
             </div>
