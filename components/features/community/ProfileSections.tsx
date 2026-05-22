@@ -1,4 +1,6 @@
+import type { ReactNode } from "react"
 import { SDG_LIST } from "@/lib/constants/sdgs"
+import Card from "@/components/ui/Card"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -39,7 +41,6 @@ interface Props {
   sdgProgress: SdgProgressItem[]
   projects: ProjectItem[]
   awards: AwardItem[]
-  linkedinUrl: string | null
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -84,15 +85,9 @@ function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-GB", { month: "short", year: "numeric" })
 }
 
-// ─── Card wrapper ─────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function SectionCard({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">{children}</div>
-  )
-}
-
-function SectionHeading({ children }: { children: React.ReactNode }) {
+function SectionHeading({ children }: { children: ReactNode }) {
   return <h2 className="text-base font-bold text-gray-900 mb-4">{children}</h2>
 }
 
@@ -110,15 +105,15 @@ export default function ProfileSections({
     <div className="flex flex-col gap-4">
       {/* ── Section 1: About ── */}
       {bio && bio.trim().length > 0 && (
-        <SectionCard>
+        <Card className="rounded-2xl">
           <SectionHeading>About</SectionHeading>
           <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{bio}</p>
-        </SectionCard>
+        </Card>
       )}
 
       {/* ── Section 2: SDG Focus Areas ── */}
       {sdgFocus.length > 0 && (
-        <SectionCard>
+        <Card className="rounded-2xl">
           <SectionHeading>🌍 SDG Focus Areas</SectionHeading>
           <div className="flex flex-wrap gap-2">
             {sdgFocus.map((num) => {
@@ -135,11 +130,11 @@ export default function ProfileSections({
               )
             })}
           </div>
-        </SectionCard>
+        </Card>
       )}
 
       {/* ── Section 3: Portfolio (always render) ── */}
-      <SectionCard>
+      <Card className="rounded-2xl">
         <SectionHeading>💼 Portfolio</SectionHeading>
         {portfolio.length === 0 ? (
           <p className="text-sm text-gray-400 italic">No published items yet.</p>
@@ -170,7 +165,7 @@ export default function ProfileSections({
                     </div>
                   )}
 
-                  {item.content_url && (
+                  {item.content_url && item.content_url.startsWith("http") && (
                     <a
                       href={item.content_url}
                       target="_blank"
@@ -185,11 +180,11 @@ export default function ProfileSections({
             ))}
           </div>
         )}
-      </SectionCard>
+      </Card>
 
       {/* ── Section 4: SDG Progress ── */}
       {sdgProgress.length > 0 && (
-        <SectionCard>
+        <Card className="rounded-2xl">
           <SectionHeading>📊 SDG Engagement</SectionHeading>
           <div className="flex flex-col gap-3">
             {sdgProgress.map((item) => {
@@ -224,12 +219,12 @@ export default function ProfileSections({
               )
             })}
           </div>
-        </SectionCard>
+        </Card>
       )}
 
       {/* ── Section 5: Active Projects ── */}
       {projects.length > 0 && (
-        <SectionCard>
+        <Card className="rounded-2xl">
           <SectionHeading>🚀 Projects</SectionHeading>
           <div className="flex flex-col gap-2">
             {projects.map((project) => {
@@ -264,12 +259,12 @@ export default function ProfileSections({
               )
             })}
           </div>
-        </SectionCard>
+        </Card>
       )}
 
       {/* ── Section 6: EGA Awards ── */}
       {awards.length > 0 && (
-        <SectionCard>
+        <Card className="rounded-2xl">
           <SectionHeading>🏅 EGA Awards</SectionHeading>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {awards.map((award) => {
@@ -293,7 +288,7 @@ export default function ProfileSections({
               )
             })}
           </div>
-        </SectionCard>
+        </Card>
       )}
     </div>
   )
