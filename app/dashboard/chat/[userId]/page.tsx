@@ -29,7 +29,8 @@ export default async function ChatThreadPage({ params }: { params: Promise<{ use
   if (!partnerRaw) notFound()
 
   const partner = partnerRaw as { id: string; full_name: string; avatar_url: string | null }
-  const threadMessages = (threadRaw ?? []) as ChatMessage[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const threadMessages = (threadRaw ?? []) as unknown as ChatMessage[]
 
   type RawMsg = {
     id: string; sender_id: string; recipient_id: string; content: string; read_at: string | null; created_at: string
