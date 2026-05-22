@@ -74,8 +74,13 @@ export default function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolea
     router.push("/login")
   }
 
+  const isChatThread = /^\/dashboard\/chat\/.+/.test(pathname)
+
   return (
-    <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-14 bg-brand-navy flex flex-col items-center py-4 gap-1 z-30 shadow-lg">
+    <aside className={cn(
+      "fixed left-0 top-0 h-dvh w-14 bg-brand-navy flex flex-col items-center py-4 gap-1 z-30 shadow-lg transition-transform duration-300",
+      isChatThread ? "-translate-x-full md:translate-x-0" : "translate-x-0"
+    )}>
       {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
         const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href))
         const isChat = href === "/dashboard/chat"

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import type { RealtimeChannel } from "@supabase/supabase-js"
 import ProfileAvatar from "@/components/ui/ProfileAvatar"
-import { Send, ChevronLeft } from "lucide-react"
+import { Send, ChevronLeft, Paperclip, Mic, File as FileIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export type ChatMessage = {
@@ -15,6 +15,9 @@ export type ChatMessage = {
   content: string
   read_at: string | null
   created_at: string
+  attachment_url?: string | null
+  attachment_type?: "image" | "audio" | "file" | null
+  attachment_name?: string | null
 }
 
 type Props = {
@@ -29,14 +32,19 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
   const [input, setInput] = useState("")
   const [sending, setSending] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [isPartnerOnline, setIsPartnerOnline] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
 
   const router = useRouter()
   const bottomRef = useRef<HTMLDivElement>(null)
   const channelRef = useRef<RealtimeChannel | null>(null)
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastTypingRef = useRef(0)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
   const supabase = createClient()
 
   const markRead = useCallback(() => {
@@ -51,7 +59,6 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  // Mark current thread as read on mount
   useEffect(() => { markRead() }, [markRead])
 
   useEffect(() => {
@@ -59,7 +66,6 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
     const ch = supabase.channel(`dm:${channelId}`)
 
     ch
-      // --- Presence: online dot ---
       .on("presence", { event: "sync" }, () => {
         const state = ch.presenceState<{ userId: string }>()
         const online = Object.values(state)
@@ -67,7 +73,6 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
           .some((p) => (p as { userId: string }).userId === partnerId)
         setIsPartnerOnline(online)
       })
-      // --- Broadcast: fast incoming message ---
       .on("broadcast", { event: "new_message" }, ({ payload }) => {
         if (payload.sender_id !== partnerId) return
         setMessages((prev) =>
@@ -75,14 +80,12 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
         )
         markRead()
       })
-      // --- Broadcast: typing indicator ---
       .on("broadcast", { event: "typing" }, ({ payload }) => {
         if (payload.userId !== partnerId) return
         setIsTyping(true)
         if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
         typingTimerRef.current = setTimeout(() => setIsTyping(false), 2000)
       })
-      // --- postgres_changes: fallback for multi-device ---
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: `recipient_id=eq.${currentUserId}` },
@@ -111,26 +114,88 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
     }
   }, [supabase, currentUserId, partnerId, markRead])
 
-  async function handleSend() {
-    const text = input.trim()
-    if (!text || sending) return
+  async function sendMessage(
+    text: string,
+    attachType?: string | null,
+    attachUrl?: string | null,
+    attachName?: string | null
+  ) {
+    if (!text.trim() && !attachUrl) return
     setSending(true)
-    setInput("")
     try {
       const res = await fetch("/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipient_id: partnerId, content: text }),
+        body: JSON.stringify({
+          recipient_id: partnerId,
+          content: text.trim() || "",
+          attachment_url: attachUrl ?? null,
+          attachment_type: attachType ?? null,
+          attachment_name: attachName ?? null,
+        }),
       })
       if (res.ok) {
         const msg = await res.json() as ChatMessage
         setMessages((prev) => [...prev, msg])
-        // Broadcast for instant delivery on recipient's side
         channelRef.current?.send({ type: "broadcast", event: "new_message", payload: msg })
       }
     } finally {
       setSending(false)
     }
+  }
+
+  async function handleSend() {
+    const text = input.trim()
+    if (!text || sending) return
+    setInput("")
+    await sendMessage(text)
+  }
+
+  async function uploadFile(file: File, type: "image" | "audio" | "file") {
+    setUploading(true)
+    try {
+      const path = `${currentUserId}/${Date.now()}-${file.name}`
+      const { data, error } = await supabase.storage.from("chat-attachments").upload(path, file)
+      if (error || !data) return
+      const { data: urlData } = supabase.storage.from("chat-attachments").getPublicUrl(data.path)
+      await sendMessage("", type, urlData.publicUrl, file.name)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ""
+    const type: "image" | "audio" | "file" = file.type.startsWith("image/") ? "image"
+      : file.type.startsWith("audio/") ? "audio" : "file"
+    await uploadFile(file, type)
+  }
+
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mr = new MediaRecorder(stream)
+      audioChunksRef.current = []
+      mr.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data) }
+      mr.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop())
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" })
+        const file = new File([blob], `voice-${Date.now()}.webm`, { type: "audio/webm" })
+        await uploadFile(file, "audio")
+      }
+      mr.start()
+      mediaRecorderRef.current = mr
+      setIsRecording(true)
+    } catch {
+      // mic permission denied — silently ignore
+    }
+  }
+
+  function stopRecording() {
+    mediaRecorderRef.current?.stop()
+    setIsRecording(false)
   }
 
   function handleInputChange(val: string) {
@@ -148,6 +213,8 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
       handleSend()
     }
   }
+
+  const isBusy = sending || uploading
 
   return (
     <div className="flex flex-col h-full">
@@ -209,7 +276,34 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
                     : "bg-gray-100 text-gray-800 rounded-tl-sm"
                 )}
               >
-                {msg.content}
+                {/* Attachment rendering */}
+                {msg.attachment_type === "image" && msg.attachment_url && (
+                  <img
+                    src={msg.attachment_url}
+                    alt={msg.attachment_name ?? "image"}
+                    className="rounded-xl max-w-full mb-1 cursor-pointer"
+                    onClick={() => window.open(msg.attachment_url!, "_blank")}
+                  />
+                )}
+                {msg.attachment_type === "audio" && msg.attachment_url && (
+                  <audio controls src={msg.attachment_url} className="max-w-full mb-1" />
+                )}
+                {msg.attachment_type === "file" && msg.attachment_url && (
+                  <a
+                    href={msg.attachment_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      "flex items-center gap-2 mb-1 px-3 py-2 rounded-lg text-sm transition-colors",
+                      isMe ? "bg-white/20 hover:bg-white/30" : "bg-gray-200 hover:bg-gray-300"
+                    )}
+                  >
+                    <FileIcon size={14} />
+                    <span className="truncate max-w-[180px]">{msg.attachment_name ?? "File"}</span>
+                  </a>
+                )}
+
+                {msg.content && <p>{msg.content}</p>}
                 <p className={cn("text-[10px] mt-1 text-right", isMe ? "text-white/60" : "text-gray-400")}>
                   {new Date(msg.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
                 </p>
@@ -223,18 +317,59 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
       {/* Input */}
       <div className="shrink-0 px-4 py-3 border-t border-gray-100 bg-white">
         <div className="flex items-end gap-2">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            accept="image/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
+            onChange={handleFileSelect}
+          />
+
+          {/* Attach file button */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isBusy}
+            aria-label="Attach file"
+            className="w-10 h-10 rounded-xl text-gray-400 hover:text-brand-navy hover:bg-gray-100 flex items-center justify-center transition-colors disabled:opacity-40 shrink-0"
+          >
+            <Paperclip size={18} />
+          </button>
+
+          {/* Voice message button */}
+          <button
+            type="button"
+            onMouseDown={startRecording}
+            onMouseUp={stopRecording}
+            onMouseLeave={stopRecording}
+            onTouchStart={startRecording}
+            onTouchEnd={stopRecording}
+            disabled={isBusy}
+            aria-label={isRecording ? "Recording…" : "Record voice message"}
+            className={cn(
+              "w-10 h-10 rounded-xl flex items-center justify-center transition-colors disabled:opacity-40 shrink-0",
+              isRecording
+                ? "bg-red-500 text-white animate-pulse"
+                : "text-gray-400 hover:text-brand-navy hover:bg-gray-100"
+            )}
+          >
+            <Mic size={18} />
+          </button>
+
           <textarea
             rows={1}
             value={input}
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={`Message ${partnerName}…`}
-            className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy/30 focus:border-brand-navy max-h-32"
+            placeholder={uploading ? "Uploading…" : `Message ${partnerName}…`}
+            disabled={uploading}
+            className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-navy/30 focus:border-brand-navy max-h-32 disabled:opacity-50"
           />
           <button
             type="button"
             onClick={handleSend}
-            disabled={!input.trim() || sending}
+            disabled={!input.trim() || isBusy}
             aria-label="Send message"
             className="w-10 h-10 bg-brand-navy text-white rounded-xl flex items-center justify-center hover:bg-brand-navy/90 transition-colors disabled:opacity-40 shrink-0"
           >

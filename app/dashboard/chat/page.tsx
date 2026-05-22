@@ -41,7 +41,7 @@ export default async function ChatPage() {
   const conversations = Array.from(convMap.values())
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex h-dvh">
       <div className="w-full md:w-80 md:shrink-0 border-r border-gray-100 bg-white flex flex-col">
         <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100">
           <MessageCircle size={18} className="text-brand-navy" />

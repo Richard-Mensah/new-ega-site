@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import DashboardSidebar from "@/components/layout/DashboardSidebar"
+import DashboardContentWrapper from "@/components/layout/DashboardContentWrapper"
 import PresenceHeartbeat from "@/components/features/dashboard/PresenceHeartbeat"
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "rmensahuk@gmail.com")
@@ -15,10 +16,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="flex min-h-screen bg-brand-bg">
       <DashboardSidebar isAdmin={isAdmin} />
-      <div className="ml-14 flex-1 flex flex-col min-h-screen">
+      <DashboardContentWrapper>
         <PresenceHeartbeat />
         {children}
-      </div>
+      </DashboardContentWrapper>
     </div>
   )
 }
