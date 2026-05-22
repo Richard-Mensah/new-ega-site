@@ -26,7 +26,7 @@ export default function MentorSidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-14 bg-brand-navy flex flex-col items-center py-4 gap-1 z-30 shadow-lg">
+    <aside className="hidden md:flex fixed left-0 top-16 h-[calc(100vh-4rem)] w-14 bg-brand-navy flex-col items-center py-4 gap-1 z-30 shadow-lg">
       {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
         const isActive = pathname === href || (href !== "/mentor" && pathname.startsWith(href))
         return (

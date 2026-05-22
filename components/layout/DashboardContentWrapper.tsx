@@ -8,8 +8,8 @@ export default function DashboardContentWrapper({ children }: { children: React.
   const isChatThread = /^\/dashboard\/chat\/.+/.test(pathname)
   return (
     <div className={cn(
-      "flex-1 flex flex-col min-h-screen",
-      isChatThread ? "md:ml-14" : "ml-14"
+      "flex-1 flex flex-col min-h-screen pb-20 md:pb-0",
+      isChatThread ? "md:ml-14" : "md:ml-14"
     )}>
       {children}
     </div>

@@ -78,7 +78,7 @@ export default function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolea
 
   return (
     <aside className={cn(
-      "fixed left-0 top-0 h-dvh w-14 bg-brand-navy flex flex-col items-center py-4 gap-1 z-30 shadow-lg transition-transform duration-300",
+      "hidden md:flex fixed left-0 top-0 h-dvh w-14 bg-brand-navy flex-col items-center py-4 gap-1 z-30 shadow-lg transition-transform duration-300",
       isChatThread ? "-translate-x-full md:translate-x-0" : "translate-x-0"
     )}>
       {NAV_ITEMS.map(({ href, icon: Icon, label }) => {

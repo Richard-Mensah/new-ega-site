@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import DashboardSidebar from "@/components/layout/DashboardSidebar"
 import DashboardContentWrapper from "@/components/layout/DashboardContentWrapper"
+import MobileNav from "@/components/layout/MobileNav"
 import PresenceHeartbeat from "@/components/features/dashboard/PresenceHeartbeat"
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "rmensahuk@gmail.com")
@@ -20,6 +21,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <PresenceHeartbeat />
         {children}
       </DashboardContentWrapper>
+      <MobileNav isAdmin={isAdmin} />
     </div>
   )
 }
