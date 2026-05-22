@@ -47,7 +47,8 @@
       "Bash(ls tailwind* *.config.*)",
       "Bash(ls *.config.ts *.config.js *.config.mjs)",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('compilerOptions',{}\\).get\\('jsx',''\\)\\)\")",
-      "Bash(mkdir \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\app\\\\dashboard\\\\community\\\\[participantId]\")"
+      "Bash(mkdir \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\app\\\\dashboard\\\\community\\\\[participantId]\")",
+      "Bash(git push *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\joe\\Documents\\GitHub\\new-ega-site\\node_modules\\next",
