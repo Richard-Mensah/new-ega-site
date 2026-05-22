@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "rmensahuk@gmail.com")
   .split(",")
   .map((e) => e.trim())
   .filter(Boolean)

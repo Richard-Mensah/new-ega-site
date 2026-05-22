@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import ParticipantTable from "@/components/features/admin/ParticipantTable"
 import type { Tables } from "@/types/database"
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "rmensahuk@gmail.com")
   .split(",")
   .map((e) => e.trim())
   .filter(Boolean)
