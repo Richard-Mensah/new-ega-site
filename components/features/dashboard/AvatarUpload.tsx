@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Camera, Loader2, CheckCircle2, X } from "lucide-react"
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function AvatarUpload({ currentUrl, fullName, onUploaded }: Props) {
+  const router = useRouter()
   const [preview, setPreview] = useState<string | null>(currentUrl)
   const [imgFailed, setImgFailed] = useState(false)
   const [pendingFile, setPendingFile] = useState<File | null>(null)
@@ -74,9 +76,12 @@ export default function AvatarUpload({ currentUrl, fullName, onUploaded }: Props
       }
 
       onUploaded(json.url)
+      setPreview(json.url)
+      setImgFailed(false)
       setPendingFile(null)
       setSuccess(true)
       setTimeout(() => setSuccess(false), 4000)
+      router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed. Please try again.")
       setPreview(currentUrl)
