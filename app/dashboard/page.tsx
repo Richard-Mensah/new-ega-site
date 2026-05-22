@@ -42,7 +42,7 @@ export default async function DashboardPage() {
     supabase.from("sessions").select("*").eq("participant_id", user.id).eq("status", "completed"),
     supabase
       .from("mentorship_pairs")
-      .select("mentor_id, profiles!mentor_id(full_name, country, avatar_url)")
+      .select("mentor_id, profiles!mentor_id(full_name, country, avatar_url, organization)")
       .eq("participant_id", user.id)
       .eq("status", "active")
       .single(),
@@ -59,7 +59,7 @@ export default async function DashboardPage() {
   const sdgProgress = sdgRaw as Tables<"sdg_progress">[] | null
   const projects = projectsRaw as Tables<"projects">[] | null
   const sessions = sessionsRaw as Tables<"sessions">[] | null
-  type MentorProfile = { full_name: string; country: string | null; avatar_url: string | null }
+  type MentorProfile = { full_name: string; country: string | null; avatar_url: string | null; organization: string | null }
   const pair = pairRaw as { mentor_id: string; profiles: MentorProfile | null } | null
   const onlineUsers = (onlineRaw ?? []) as { id: string; full_name: string; avatar_url: string | null }[]
 

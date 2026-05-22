@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import Card from "@/components/ui/Card"
 import Badge from "@/components/ui/Badge"
-import { MapPin, Calendar, MessageCircle } from "lucide-react"
+import ProfileAvatar from "@/components/ui/ProfileAvatar"
+import { MapPin, Calendar, MessageCircle, Linkedin, Building2 } from "lucide-react"
 import type { Tables } from "@/types/database"
 
 export default async function MentorPage() {
@@ -12,11 +13,11 @@ export default async function MentorPage() {
 
   const { data: pairRaw } = await supabase
     .from("mentorship_pairs")
-    .select("*, profiles!mentor_id(full_name, country, bio, avatar_url)")
+    .select("*, profiles!mentor_id(full_name, country, bio, avatar_url, organization, linkedin_url)")
     .eq("participant_id", user.id)
     .eq("status", "active")
     .single()
-  type MentorProfile = { full_name: string; country: string | null; bio: string | null; avatar_url: string | null }
+  type MentorProfile = { full_name: string; country: string | null; bio: string | null; avatar_url: string | null; organization: string | null; linkedin_url: string | null }
   const pair = pairRaw as { profiles: MentorProfile | null } | null
 
   const { data: sessionsRaw } = await supabase
@@ -49,21 +50,40 @@ export default async function MentorPage() {
       ) : (
         <Card accent="gold">
           <div className="flex items-start gap-6">
-            <div className="w-20 h-20 rounded-full bg-brand-navy/10 border-4 border-brand-gold flex items-center justify-center shrink-0">
-              <span className="text-2xl font-bold text-brand-navy">
-                {mentor.full_name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-              </span>
+            <div className="border-4 border-brand-gold rounded-full shrink-0">
+              <ProfileAvatar avatarUrl={mentor.avatar_url} fullName={mentor.full_name} size="xl" />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-brand-navy">{mentor.full_name}</h2>
-              {mentor.country && (
-                <div className="flex items-center gap-1 text-gray-500 text-sm mt-1">
-                  <MapPin size={14} />
-                  <span>{mentor.country}</span>
-                </div>
-              )}
-              <Badge label="Active Mentor" color="green" size="md" />
+              <div className="flex items-center gap-3 flex-wrap">
+                <h2 className="text-xl font-bold text-brand-navy">{mentor.full_name}</h2>
+                <Badge label="Active Mentor" color="green" size="md" />
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+                {mentor.country && (
+                  <div className="flex items-center gap-1 text-gray-500 text-sm">
+                    <MapPin size={13} />
+                    <span>{mentor.country}</span>
+                  </div>
+                )}
+                {mentor.organization && (
+                  <div className="flex items-center gap-1 text-gray-500 text-sm">
+                    <Building2 size={13} />
+                    <span>{mentor.organization}</span>
+                  </div>
+                )}
+              </div>
               {mentor.bio && <p className="text-gray-600 text-sm leading-relaxed mt-3">{mentor.bio}</p>}
+              {mentor.linkedin_url && (
+                <a
+                  href={mentor.linkedin_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-[#0A66C2] hover:underline"
+                >
+                  <Linkedin size={15} />
+                  View LinkedIn Profile
+                </a>
+              )}
             </div>
           </div>
         </Card>
