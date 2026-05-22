@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EGA Community – Full Design Preview</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F0F2F5; min-height: 100vh; padding: 0; }
+
+  /* ── TOP LABEL ── */
+  .preview-header { background: #0D1B4B; color: #fff; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; }
+  .preview-header h1 { font-size: 14px; font-weight: 700; }
+  .preview-header .tabs { display: flex; gap: 8px; }
+  .tab-btn { font-size: 12px; padding: 5px 14px; border-radius: 99px; border: none; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+  .tab-btn.active { background: #C9A84C; color: #fff; }
+  .tab-btn:not(.active) { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); }
+  .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.2); color: #fff; }
+
+  /* ── SHARED LAYOUT ── */
+  .screen { display: none; padding: 20px; max-width: 900px; margin: 0 auto; }
+  .screen.active { display: block; }
+
+  /* ── COMMUNITY GRID ── */
+  .comm-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+  .comm-title h2 { font-size: 20px; font-weight: 800; color: #0D1B4B; }
+  .comm-title p { font-size: 12px; color: #888; margin-top: 2px; }
+  .comm-search-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .search-box { display: flex; align-items: center; gap: 6px; background: #fff; border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 7px 12px; font-size: 13px; color: #aaa; flex: 1; min-width: 200px; }
+  .filter-row { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-chip { font-size: 11px; padding: 4px 12px; border-radius: 99px; border: 1.5px solid #e5e7eb; color: #666; font-weight: 600; cursor: pointer; transition: all 0.15s; background: #fff; }
+  .filter-chip.active { background: #0D1B4B; color: #fff; border-color: #0D1B4B; }
+  .filter-chip.sdg { border-color: transparent; color: #fff; font-weight: 700; }
+  .comm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 700px) { .comm-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  /* Portrait card */
+  .pcard { background: #fff; border-radius: 16px; border: 1.5px solid #f0f0f0; overflow: hidden; cursor: pointer; transition: all 0.18s; }
+  .pcard:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.1); transform: translateY(-2px); border-color: #e0e0e0; }
+  .pcard-banner { height: 52px; position: relative; }
+  .pcard-sdg-dots { position: absolute; bottom: 8px; left: 12px; display: flex; gap: 4px; }
+  .sdg-dot { width: 18px; height: 18px; border-radius: 4px; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .pcard-body { padding: 14px 14px 12px; }
+  .pcard-identity { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .pcard-avatar { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 13px; flex-shrink: 0; margin-top: -28px; border: 2.5px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+  .pcard-name { font-size: 13px; font-weight: 800; color: #0D1B4B; line-height: 1.2; margin-top: 4px; }
+  .pcard-org { font-size: 10px; color: #C9A84C; font-weight: 700; margin-top: 1px; }
+  .pcard-country { font-size: 10px; color: #999; }
+  .pcard-bio { font-size: 11px; color: #666; line-height: 1.5; margin-bottom: 10px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .pcard-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 8px; border-top: 1px solid #f5f5f5; }
+  .pcard-likes { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #e55; font-weight: 700; }
+  .pcard-view { font-size: 11px; font-weight: 700; color: #0D1B4B; padding: 4px 12px; background: #F0F2F5; border-radius: 99px; transition: all 0.15s; }
+  .pcard:hover .pcard-view { background: #0D1B4B; color: #fff; }
+
+  /* ── INDIVIDUAL PROFILE PAGE ── */
+  .back-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #666; font-weight: 600; margin-bottom: 16px; cursor: pointer; padding: 5px 0; }
+  .back-btn:hover { color: #0D1B4B; }
+
+  .profile-layout { display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: start; }
+  @media (max-width: 720px) { .profile-layout { grid-template-columns: 1fr; } }
+
+  /* Left column */
+  .prof-hero { background: linear-gradient(160deg, #0D1B4B 0%, #0f2060 60%, #1a3280 100%); border-radius: 20px; padding: 24px; position: relative; overflow: hidden; margin-bottom: 14px; }
+  .prof-hero::before { content: ''; position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; border-radius: 50%; background: rgba(201,168,76,0.08); }
+  .prof-hero::after { content: ''; position: absolute; bottom: -30px; left: 30%; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.03); }
+  .prof-hero-top { display: flex; align-items: flex-start; gap: 16px; position: relative; z-index: 1; }
+  .prof-avatar { width: 72px; height: 72px; border-radius: 18px; background: linear-gradient(135deg, #C9A84C, #e8c96e); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 22px; border: 3px solid rgba(255,255,255,0.25); flex-shrink: 0; box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+  .prof-identity { flex: 1; }
+  .prof-name { font-size: 20px; font-weight: 800; color: #fff; line-height: 1.2; }
+  .prof-org { font-size: 13px; color: #C9A84C; font-weight: 700; margin-top: 3px; }
+  .prof-meta { display: flex; gap: 14px; margin-top: 6px; flex-wrap: wrap; }
+  .prof-meta-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: rgba(255,255,255,0.65); }
+  .prof-appreciate { position: relative; z-index: 1; }
+  .appreciate-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; background: rgba(201,168,76,0.15); border: 1.5px solid rgba(201,168,76,0.4); border-radius: 14px; padding: 10px 16px; cursor: pointer; transition: all 0.2s; }
+  .appreciate-btn:hover, .appreciate-btn.liked { background: #C9A84C; border-color: #C9A84C; }
+  .appreciate-btn.liked .appr-heart { color: #fff; }
+  .appreciate-btn.liked .appr-count { color: #fff; }
+  .appreciate-btn.liked .appr-label { color: rgba(255,255,255,0.8); }
+  .appr-heart { font-size: 20px; color: #C9A84C; transition: transform 0.2s; }
+  .appreciate-btn:hover .appr-heart { transform: scale(1.15); }
+  .appr-count { font-size: 16px; font-weight: 800; color: #C9A84C; line-height: 1; }
+  .appr-label { font-size: 9px; color: rgba(201,168,76,0.7); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Section cards */
+  .s-card { background: #fff; border-radius: 16px; border: 1.5px solid #f0f0f0; padding: 16px 18px; margin-bottom: 14px; }
+  .s-card-title { font-size: 11px; font-weight: 800; color: #0D1B4B; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .s-card-title .icon { font-size: 14px; }
+  .bio-text { font-size: 13px; color: #555; line-height: 1.7; }
+  .sdg-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .sdg-chip-full { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 99px; font-size: 11px; font-weight: 700; color: #fff; }
+  .sdg-chip-full .sdg-num { opacity: 0.75; font-size: 10px; }
+
+  /* Portfolio grid */
+  .portfolio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .port-item { border-radius: 10px; overflow: hidden; border: 1.5px solid #f0f0f0; transition: all 0.15s; cursor: pointer; }
+  .port-item:hover { border-color: #C9A84C; box-shadow: 0 2px 8px rgba(201,168,76,0.15); }
+  .port-item-head { height: 36px; display: flex; align-items: center; justify-content: center; }
+  .port-item-body { padding: 8px 10px; }
+  .port-item-type { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; }
+  .port-item-title { font-size: 11px; font-weight: 700; color: #0D1B4B; margin-top: 1px; line-height: 1.3; }
+  .port-item-tags { display: flex; gap: 3px; margin-top: 4px; flex-wrap: wrap; }
+  .port-tag { font-size: 8px; padding: 1px 5px; border-radius: 99px; background: #F0F2F5; color: #666; font-weight: 600; }
+  .port-view { display: flex; align-items: center; gap: 3px; font-size: 9px; color: #C9A84C; font-weight: 700; margin-top: 4px; }
+
+  /* SDG progress */
+  .sdg-prog-list { display: flex; flex-direction: column; gap: 8px; }
+  .sdg-prog-row { display: flex; align-items: center; gap: 10px; }
+  .sdg-prog-label { display: flex; align-items: center; gap: 6px; width: 120px; flex-shrink: 0; }
+  .sdg-prog-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .sdg-prog-name { font-size: 10px; color: #555; font-weight: 600; }
+  .sdg-prog-bar { flex: 1; height: 7px; background: #F0F2F5; border-radius: 99px; overflow: hidden; }
+  .sdg-prog-fill { height: 100%; border-radius: 99px; }
+  .sdg-prog-level { font-size: 9px; color: #aaa; font-weight: 700; width: 48px; text-align: right; flex-shrink: 0; }
+
+  /* Projects */
+  .proj-list { display: flex; flex-direction: column; gap: 7px; }
+  .proj-row { display: flex; align-items: center; justify-content: space-between; background: #F8F9FA; border-radius: 9px; padding: 8px 12px; border: 1px solid #eee; }
+  .proj-left { display: flex; align-items: center; gap: 8px; }
+  .proj-sdg-badge { width: 20px; height: 20px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 800; color: #fff; }
+  .proj-name { font-size: 11px; font-weight: 700; color: #0D1B4B; }
+  .proj-status { font-size: 9px; color: #888; margin-top: 1px; }
+  .proj-stage { font-size: 9px; padding: 2px 8px; background: #0D1B4B; color: #fff; border-radius: 99px; font-weight: 700; }
+
+  /* Awards */
+  .awards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .award-item { border-radius: 10px; padding: 10px 12px; border: 1.5px solid; }
+  .award-title { font-size: 11px; font-weight: 800; }
+  .award-note { font-size: 10px; margin-top: 3px; opacity: 0.75; }
+  .award-date { font-size: 9px; margin-top: 4px; opacity: 0.5; font-weight: 600; }
+
+  /* Right sidebar */
+  .prof-sidebar {}
+  .sidebar-card { background: #fff; border-radius: 16px; border: 1.5px solid #f0f0f0; padding: 16px 18px; margin-bottom: 14px; }
+  .sidebar-card-title { font-size: 11px; font-weight: 800; color: #0D1B4B; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 10px; }
+  .stat-row { display: flex; justify-content: space-around; }
+  .stat-item { text-align: center; }
+  .stat-num { font-size: 24px; font-weight: 800; color: #0D1B4B; }
+  .stat-label { font-size: 10px; color: #aaa; font-weight: 600; margin-top: 1px; }
+  .linkedin-link { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #F0F2F5; border-radius: 10px; font-size: 12px; font-weight: 700; color: #0D1B4B; text-decoration: none; transition: all 0.15s; }
+  .linkedin-link:hover { background: #0D1B4B; color: #fff; }
+  .privacy-note { background: #F8F9FA; border-radius: 10px; padding: 10px 12px; }
+  .privacy-text { font-size: 10px; color: #999; line-height: 1.5; }
+  .privacy-text strong { color: #666; }
+</style>
+</head>
+<body>
+
+<div class="preview-header">
+  <h1>EGA Community — Full Design Preview</h1>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showScreen('community')">Community Grid</button>
+    <button class="tab-btn" onclick="showScreen('profile')">Participant Profile</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 1: COMMUNITY GRID
+══════════════════════════════════════════════ -->
+<div id="screen-community" class="screen active">
+  <div class="comm-top">
+    <div class="comm-title">
+      <h2>Community</h2>
+      <p>24 participants in the EGA community</p>
+    </div>
+    <div class="comm-search-row">
+      <div class="search-box">🔍 &nbsp;Search participants...</div>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <div class="filter-chip active">All</div>
+    <div class="filter-chip">🌍 By SDG</div>
+    <div class="filter-chip">📍 By Country</div>
+    <div class="filter-chip sdg" style="background:#E5243B">SDG 1</div>
+    <div class="filter-chip sdg" style="background:#4C9F38">SDG 3</div>
+    <div class="filter-chip sdg" style="background:#26BDE2">SDG 6</div>
+    <div class="filter-chip sdg" style="background:#FF3A21">SDG 13</div>
+    <div class="filter-chip sdg" style="background:#19486A">SDG 17</div>
+  </div>
+
+  <div class="comm-grid">
+    <!-- Card 1 -->
+    <div class="pcard" onclick="showScreen('profile')">
+      <div class="pcard-banner" style="background:linear-gradient(135deg,#0D1B4B,#1a3280)">
+        <div class="pcard-sdg-dots">
+          <div class="sdg-dot" style="background:#E5243B"></div>
+          <div class="sdg-dot" style="background:#4C9F38"></div>
+          <div class="sdg-dot" style="background:#26BDE2"></div>
+        </div>
+      </div>
+      <div class="pcard-body">
+        <div class="pcard-identity">
+          <div class="pcard-avatar" style="background:linear-gradient(135deg,#C9A84C,#e8c96e)">AM</div>
+          <div>
+            <div class="pcard-name">Amara Mensah</div>
+            <div class="pcard-org">Water &amp; Sanitation Org</div>
+            <div class="pcard-country">🇬🇭 Ghana</div>
+          </div>
+        </div>
+        <div class="pcard-bio">Passionate about clean water access across West Africa. Working with local governments on SDG 6 initiatives...</div>
+        <div class="pcard-footer">
+          <div class="pcard-likes">♥ 12</div>
+          <div class="pcard-view">View Profile →</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="pcard">
+      <div class="pcard-banner" style="background:linear-gradient(135deg,#0f2060,#1a3a80)">
+        <div class="pcard-sdg-dots">
+          <div class="sdg-dot" style="background:#FCC30B"></div>
+          <div class="sdg-dot" style="background:#DDA63A"></div>
+        </div>
+      </div>
+      <div class="pcard-body">
+        <div class="pcard-identity">
+          <div class="pcard-avatar" style="background:linear-gradient(135deg,#0D1B4B,#1a3070)">JO</div>
+          <div>
+            <div class="pcard-name">James Osei</div>
+            <div class="pcard-org">AgriTech Zambia</div>
+            <div class="pcard-country">🇿🇲 Zambia</div>
+          </div>
+        </div>
+        <div class="pcard-bio">Agricultural innovation champion focused on food security solutions for smallholder farmers across Southern Africa.</div>
+        <div class="pcard-footer">
+          <div class="pcard-likes">♥ 8</div>
+          <div class="pcard-view">View Profile →</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="pcard">
+      <div class="pcard-banner" style="background:linear-gradient(135deg,#0a1840,#162a6e)">
+        <div class="pcard-sdg-dots">
+          <div class="sdg-dot" style="background:#19486A"></div>
+          <div class="sdg-dot" style="background:#A21942"></div>
+        </div>
+      </div>
+      <div class="pcard-body">
+        <div class="pcard-identity">
+          <div class="pcard-avatar" style="background:linear-gradient(135deg,#4C9F38,#65b84e)">SK</div>
+          <div>
+            <div class="pcard-name">Sara Kovač</div>
+            <div class="pcard-org">UN Youth Delegate</div>
+            <div class="pcard-country">🇷🇸 Serbia</div>
+          </div>
+        </div>
+        <div class="pcard-bio">Global partnerships advocate representing youth voices at international development forums and SDG summits.</div>
+        <div class="pcard-footer">
+          <div class="pcard-likes">♥ 5</div>
+          <div class="pcard-view">View Profile →</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="pcard">
+      <div class="pcard-banner" style="background:linear-gradient(135deg,#0e2050,#1c3578)">
+        <div class="pcard-sdg-dots">
+          <div class="sdg-dot" style="background:#FF3A21"></div>
+          <div class="sdg-dot" style="background:#26BDE2"></div>
+        </div>
+      </div>
+      <div class="pcard-body">
+        <div class="pcard-identity">
+          <div class="pcard-avatar" style="background:linear-gradient(135deg,#FF3A21,#ff6b5a)">LM</div>
+          <div>
+            <div class="pcard-name">Lena Martinez</div>
+            <div class="pcard-org">Climate Justice Lab</div>
+            <div class="pcard-country">🇺🇸 USA</div>
+          </div>
+        </div>
+        <div class="pcard-bio">Climate action researcher focused on policy advocacy and community resilience in vulnerable coastal regions.</div>
+        <div class="pcard-footer">
+          <div class="pcard-likes">♥ 14</div>
+          <div class="pcard-view">View Profile →</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 5 -->
+    <div class="pcard">
+      <div class="pcard-banner" style="background:linear-gradient(135deg,#0b1d50,#142d6c)">
+        <div class="pcard-sdg-dots">
+          <div class="sdg-dot" style="background:#3F7E44"></div>
+          <div class="sdg-dot" style="background:#FCC30B"></div>
+          <div class="sdg-dot" style="background:#A21942"></div>
+        </div>
+      </div>
+      <div class="pcard-body">
+        <div class="pcard-identity">
+          <div class="pcard-avatar" style="background:linear-gradient(135deg,#26BDE2,#45d1f5)">TN</div>
+          <div>
+            <div class="pcard-name">Thabo Nkosi</div>
+            <div class="pcard-org">EduBridge Africa</div>
+            <div class="pcard-country">🇿🇼 Zimbabwe</div>
+          </div>
+        </div>
+        <div class="pcard-bio">Education access innovator building bridge programs for first-generation university students in rural communities.</div>
+        <div class="pcard-footer">
+          <div class="pcard-likes">♥ 9</div>
+          <div class="pcard-view">View Profile →</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 6 -->
+    <div class="pcard">
+      <div class="pcard-banner" style="background:linear-gradient(135deg,#0c1e52,#163070)">
+        <div class="pcard-sdg-dots">
+          <div class="sdg-dot" style="background:#C5192D"></div>
+          <div class="sdg-dot" style="background:#4C9F38"></div>
+        </div>
+      </div>
+      <div class="pcard-body">
+        <div class="pcard-identity">
+          <div class="pcard-avatar" style="background:linear-gradient(135deg,#C5192D,#e8344a)">FD</div>
+          <div>
+            <div class="pcard-name">Fatima Diallo</div>
+            <div class="pcard-org">Health Without Borders</div>
+            <div class="pcard-country">🇱🇷 Liberia</div>
+          </div>
+        </div>
+        <div class="pcard-bio">Community health worker dedicated to maternal health education and accessible healthcare in West African villages.</div>
+        <div class="pcard-footer">
+          <div class="pcard-likes">♥ 7</div>
+          <div class="pcard-view">View Profile →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCREEN 2: INDIVIDUAL PROFILE PAGE
+══════════════════════════════════════════════ -->
+<div id="screen-profile" class="screen">
+  <div class="back-btn" onclick="showScreen('community')">← Back to Community</div>
+
+  <div class="profile-layout">
+    <!-- LEFT COLUMN -->
+    <div>
+      <!-- Hero Card -->
+      <div class="prof-hero">
+        <div class="prof-hero-top">
+          <div class="prof-avatar">AM</div>
+          <div class="prof-identity">
+            <div class="prof-name">Amara Mensah</div>
+            <div class="prof-org">Water &amp; Sanitation Org</div>
+            <div class="prof-meta">
+              <div class="prof-meta-item">📍 Ghana</div>
+              <div class="prof-meta-item">🎓 EGA Cohort 3</div>
+              <div class="prof-meta-item">📅 Joined Jan 2024</div>
+            </div>
+          </div>
+          <div class="prof-appreciate">
+            <div class="appreciate-btn liked">
+              <div class="appr-heart">♥</div>
+              <div class="appr-count">12</div>
+              <div class="appr-label">Appreciations</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- About -->
+      <div class="s-card">
+        <div class="s-card-title"><span class="icon">👤</span> About</div>
+        <div class="bio-text">Passionate about clean water access across West Africa. I work with local governments and NGOs to implement SDG 6 initiatives in rural communities. My focus is on sustainable infrastructure that communities can maintain independently for generations.</div>
+      </div>
+
+      <!-- SDG Focus -->
+      <div class="s-card">
+        <div class="s-card-title"><span class="icon">🌍</span> SDG Focus Areas</div>
+        <div class="sdg-chips">
+          <div class="sdg-chip-full" style="background:#E5243B"><span class="sdg-num">SDG 1</span> No Poverty</div>
+          <div class="sdg-chip-full" style="background:#4C9F38"><span class="sdg-num">SDG 3</span> Good Health</div>
+          <div class="sdg-chip-full" style="background:#26BDE2"><span class="sdg-num">SDG 6</span> Clean Water</div>
+          <div class="sdg-chip-full" style="background:#FF3A21"><span class="sdg-num">SDG 13</span> Climate Action</div>
+        </div>
+      </div>
+
+      <!-- Published Portfolio -->
+      <div class="s-card">
+        <div class="s-card-title"><span class="icon">💼</span> Portfolio</div>
+        <div class="portfolio-grid">
+          <div class="port-item">
+            <div class="port-item-head" style="background:#dbeafe">📄</div>
+            <div class="port-item-body">
+              <div class="port-item-type">Article</div>
+              <div class="port-item-title">Clean Water Access in Rural Accra</div>
+              <div class="port-item-tags"><span class="port-tag">SDG 6</span><span class="port-tag">Research</span></div>
+              <div class="port-view">Read ↗</div>
+            </div>
+          </div>
+          <div class="port-item">
+            <div class="port-item-head" style="background:#fef9c3">🏆</div>
+            <div class="port-item-body">
+              <div class="port-item-type">Certificate</div>
+              <div class="port-item-title">EGA SDG Leadership 2024</div>
+              <div class="port-item-tags"><span class="port-tag">Leadership</span></div>
+            </div>
+          </div>
+          <div class="port-item">
+            <div class="port-item-head" style="background:#dcfce7">💼</div>
+            <div class="port-item-body">
+              <div class="port-item-type">Project</div>
+              <div class="port-item-title">Community Water Mapping Initiative</div>
+              <div class="port-item-tags"><span class="port-tag">Impact</span><span class="port-tag">GIS</span></div>
+              <div class="port-view">View ↗</div>
+            </div>
+          </div>
+          <div class="port-item">
+            <div class="port-item-head" style="background:#d1fae5">🎬</div>
+            <div class="port-item-body">
+              <div class="port-item-type">Video</div>
+              <div class="port-item-title">TEDx: Water is a Human Right</div>
+              <div class="port-item-tags"><span class="port-tag">Speaking</span></div>
+              <div class="port-view">Watch ↗</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SDG Progress -->
+      <div class="s-card">
+        <div class="s-card-title"><span class="icon">📊</span> SDG Engagement Progress</div>
+        <div class="sdg-prog-list">
+          <div class="sdg-prog-row">
+            <div class="sdg-prog-label"><div class="sdg-prog-dot" style="background:#26BDE2"></div><div class="sdg-prog-name">SDG 6 · Water</div></div>
+            <div class="sdg-prog-bar"><div class="sdg-prog-fill" style="width:90%;background:#26BDE2"></div></div>
+            <div class="sdg-prog-level">Leading</div>
+          </div>
+          <div class="sdg-prog-row">
+            <div class="sdg-prog-label"><div class="sdg-prog-dot" style="background:#4C9F38"></div><div class="sdg-prog-name">SDG 3 · Health</div></div>
+            <div class="sdg-prog-bar"><div class="sdg-prog-fill" style="width:65%;background:#4C9F38"></div></div>
+            <div class="sdg-prog-level">Acting</div>
+          </div>
+          <div class="sdg-prog-row">
+            <div class="sdg-prog-label"><div class="sdg-prog-dot" style="background:#E5243B"></div><div class="sdg-prog-name">SDG 1 · Poverty</div></div>
+            <div class="sdg-prog-bar"><div class="sdg-prog-fill" style="width:40%;background:#E5243B"></div></div>
+            <div class="sdg-prog-level">Learning</div>
+          </div>
+          <div class="sdg-prog-row">
+            <div class="sdg-prog-label"><div class="sdg-prog-dot" style="background:#FF3A21"></div><div class="sdg-prog-name">SDG 13 · Climate</div></div>
+            <div class="sdg-prog-bar"><div class="sdg-prog-fill" style="width:20%;background:#FF3A21"></div></div>
+            <div class="sdg-prog-level">Aware</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Projects -->
+      <div class="s-card">
+        <div class="s-card-title"><span class="icon">🚀</span> Active Projects</div>
+        <div class="proj-list">
+          <div class="proj-row">
+            <div class="proj-left">
+              <div class="proj-sdg-badge" style="background:#26BDE2">6</div>
+              <div><div class="proj-name">Community Water Mapping Initiative</div><div class="proj-status">In progress</div></div>
+            </div>
+            <div class="proj-stage">Stage 3</div>
+          </div>
+          <div class="proj-row">
+            <div class="proj-left">
+              <div class="proj-sdg-badge" style="background:#4C9F38">3</div>
+              <div><div class="proj-name">Rural Health Educator Network</div><div class="proj-status">Planning</div></div>
+            </div>
+            <div class="proj-stage">Stage 1</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Awards -->
+      <div class="s-card">
+        <div class="s-card-title"><span class="icon">🏅</span> EGA Awards</div>
+        <div class="awards-grid">
+          <div class="award-item" style="background:#fef9c3;border-color:#fde68a">
+            <div class="award-title" style="color:#92400e">🌟 Leadership Excellence</div>
+            <div class="award-note" style="color:#92400e">Demonstrated outstanding team leadership</div>
+            <div class="award-date" style="color:#92400e">Mar 2024</div>
+          </div>
+          <div class="award-item" style="background:#dcfce7;border-color:#bbf7d0">
+            <div class="award-title" style="color:#166534">🌍 SDG Champion</div>
+            <div class="award-note" style="color:#166534">Exceptional impact on SDG 6 initiatives</div>
+            <div class="award-date" style="color:#166534">Apr 2024</div>
+          </div>
+          <div class="award-item" style="background:#dbeafe;border-color:#bfdbfe">
+            <div class="award-title" style="color:#1e40af">🗣 Communication Star</div>
+            <div class="award-note" style="color:#1e40af">Inspiring presentations and advocacy</div>
+            <div class="award-date" style="color:#1e40af">May 2024</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div class="prof-sidebar">
+      <!-- Stats -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">Impact at a Glance</div>
+        <div class="stat-row">
+          <div class="stat-item">
+            <div class="stat-num">12</div>
+            <div class="stat-label">Appreciations</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num">4</div>
+            <div class="stat-label">Portfolio</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num">3</div>
+            <div class="stat-label">Awards</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LinkedIn -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">Connect</div>
+        <a class="linkedin-link" href="#">🔗 &nbsp;View LinkedIn Profile</a>
+      </div>
+
+      <!-- Privacy note -->
+      <div class="sidebar-card">
+        <div class="privacy-note">
+          <div class="privacy-text"><strong>Privacy protected</strong> — Email address, date of birth, and other personal details are never shown on public profiles. Only information participants have chosen to share is visible here.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('screen-' + id).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      if (b.textContent.toLowerCase().includes(id === 'community' ? 'grid' : 'profile')) b.classList.add('active');
+    });
+  }
+</script>
+</body>
+</html>

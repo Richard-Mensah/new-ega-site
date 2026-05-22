@@ -1,0 +1,179 @@
+<style>
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+  .section-card { background: #fff; border-radius: 14px; border: 2px solid #e5e7eb; overflow: hidden; cursor: pointer; transition: all 0.18s; }
+  .section-card:hover { border-color: #C9A84C; box-shadow: 0 4px 16px rgba(201,168,76,0.15); }
+  .section-card.selected { border-color: #C9A84C; background: #fffbf0; box-shadow: 0 0 0 3px rgba(201,168,76,0.25); }
+  .section-card.selected .s-header { background: #0D1B4B; }
+  .section-card.selected .s-header .s-title { color: #fff; }
+  .section-card.selected .s-header .s-icon { color: #C9A84C; }
+  .s-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px 8px; background: #F8F9FA; }
+  .s-icon { font-size: 20px; }
+  .s-title { font-weight: 700; font-size: 13px; color: #0D1B4B; }
+  .s-badge { margin-left: auto; font-size: 9px; padding: 2px 8px; border-radius: 99px; font-weight: 600; }
+  .s-badge.always { background: #dcfce7; color: #16a34a; }
+  .s-badge.optional { background: #F0F2F5; color: #888; }
+  .s-preview { padding: 8px 14px 12px; }
+  .s-preview-text { font-size: 10px; color: #666; line-height: 1.5; }
+
+  /* Mini mockups inside each card */
+  .mini-portfolio { display: flex; gap: 5px; margin-top: 5px; }
+  .mini-port-item { flex: 1; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 600; color: #fff; }
+  .mini-sdg-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .mini-sdg { font-size: 9px; padding: 2px 8px; border-radius: 99px; color: #fff; font-weight: 600; }
+  .mini-progress { margin-top: 5px; }
+  .mini-prog-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+  .mini-prog-label { font-size: 8px; color: #555; width: 60px; }
+  .mini-prog-bar { flex: 1; height: 5px; background: #F0F2F5; border-radius: 99px; overflow: hidden; }
+  .mini-prog-fill { height: 100%; border-radius: 99px; }
+  .mini-projects { display: flex; flex-direction: column; gap: 4px; margin-top: 5px; }
+  .mini-proj { background: #F0F2F5; border-radius: 5px; padding: 4px 8px; font-size: 9px; color: #333; font-weight: 500; display: flex; align-items: center; justify-content: space-between; }
+  .mini-proj-stage { font-size: 8px; padding: 1px 6px; border-radius: 99px; background: #0D1B4B; color: #fff; }
+  .mini-awards { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
+  .mini-award { padding: 3px 8px; border-radius: 6px; font-size: 8px; font-weight: 600; }
+  .mini-online { display: flex; align-items: center; gap: 6px; margin-top: 5px; }
+  .dot-online { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+  .dot-recent { width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; }
+  .mini-online-text { font-size: 9px; color: #555; }
+</style>
+
+<h2>Which sections should appear on a participant's profile page?</h2>
+<p class="subtitle">Select all the sections you want to show. "Always shown" sections are core — the rest are optional. Click to toggle.</p>
+
+<div class="grid-2 options" data-multiselect>
+
+  <!-- Bio -->
+  <div class="section-card option selected" data-choice="bio" onclick="toggleSelect(this)">
+    <div class="s-header">
+      <span class="s-icon">👤</span>
+      <span class="s-title">Profile & Bio</span>
+      <span class="s-badge always">Always shown</span>
+    </div>
+    <div class="s-preview">
+      <div class="s-preview-text">Name, country, organisation, bio text, join date. Hidden: email, date of birth, internal IDs.</div>
+    </div>
+  </div>
+
+  <!-- SDG Focus -->
+  <div class="section-card option selected" data-choice="sdg-focus" onclick="toggleSelect(this)">
+    <div class="s-header">
+      <span class="s-icon">🌍</span>
+      <span class="s-title">SDG Focus Areas</span>
+      <span class="s-badge always">Always shown</span>
+    </div>
+    <div class="s-preview">
+      <div class="mini-sdg-chips">
+        <span class="mini-sdg" style="background:#E5243B">SDG 1</span>
+        <span class="mini-sdg" style="background:#4C9F38">SDG 3</span>
+        <span class="mini-sdg" style="background:#26BDE2">SDG 6</span>
+        <span class="mini-sdg" style="background:#FF3A21">SDG 13</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Portfolio -->
+  <div class="section-card option selected" data-choice="portfolio" onclick="toggleSelect(this)">
+    <div class="s-header">
+      <span class="s-icon">💼</span>
+      <span class="s-title">Published Portfolio</span>
+      <span class="s-badge optional">Optional</span>
+    </div>
+    <div class="s-preview">
+      <div class="s-preview-text">Only items the participant has marked as "Published" — articles, projects, certificates, videos.</div>
+      <div class="mini-portfolio">
+        <div class="mini-port-item" style="background:#2563eb">📄 Article</div>
+        <div class="mini-port-item" style="background:#C9A84C">🏆 Cert</div>
+        <div class="mini-port-item" style="background:#22c55e">🎬 Video</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SDG Progress -->
+  <div class="section-card option selected" data-choice="sdg-progress" onclick="toggleSelect(this)">
+    <div class="s-header">
+      <span class="s-icon">📊</span>
+      <span class="s-title">SDG Engagement Progress</span>
+      <span class="s-badge optional">Optional</span>
+    </div>
+    <div class="s-preview">
+      <div class="s-preview-text">Shows engagement level (Aware → Leading) per SDG they're working on.</div>
+      <div class="mini-progress">
+        <div class="mini-prog-row">
+          <div class="mini-prog-label">SDG 3 Health</div>
+          <div class="mini-prog-bar"><div class="mini-prog-fill" style="width:75%;background:#4C9F38"></div></div>
+        </div>
+        <div class="mini-prog-row">
+          <div class="mini-prog-label">SDG 6 Water</div>
+          <div class="mini-prog-bar"><div class="mini-prog-fill" style="width:50%;background:#26BDE2"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Projects -->
+  <div class="section-card option selected" data-choice="projects" onclick="toggleSelect(this)">
+    <div class="s-header">
+      <span class="s-icon">🚀</span>
+      <span class="s-title">Active Projects</span>
+      <span class="s-badge optional">Optional</span>
+    </div>
+    <div class="s-preview">
+      <div class="s-preview-text">SDG-aligned projects they're working on, with stage indicator.</div>
+      <div class="mini-projects">
+        <div class="mini-proj">Clean Water Initiative <span class="mini-proj-stage">Stage 2</span></div>
+        <div class="mini-proj">Youth Leadership Program <span class="mini-proj-stage">Stage 1</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EGA Awards -->
+  <div class="section-card option selected" data-choice="awards" onclick="toggleSelect(this)">
+    <div class="s-header">
+      <span class="s-icon">🏅</span>
+      <span class="s-title">EGA Awards Received</span>
+      <span class="s-badge optional">Optional</span>
+    </div>
+    <div class="s-preview">
+      <div class="s-preview-text">Recognitions given by their mentor — Leadership, SDG, Communication, etc.</div>
+      <div class="mini-awards">
+        <span class="mini-award" style="background:#fef3c7;color:#92400e">🌟 Leadership</span>
+        <span class="mini-award" style="background:#dcfce7;color:#166534">🌍 SDG Impact</span>
+        <span class="mini-award" style="background:#dbeafe;color:#1e40af">🗣 Communication</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Online Status -->
+  <div class="section-card option" data-choice="online-status" onclick="toggleSelect(this)">
+    <div class="s-header">
+      <span class="s-icon">🟢</span>
+      <span class="s-title">Online / Active Indicator</span>
+      <span class="s-badge optional">Optional</span>
+    </div>
+    <div class="s-preview">
+      <div class="s-preview-text">Shows if participant is currently online or recently active.</div>
+      <div class="mini-online">
+        <div class="dot-online"></div>
+        <div class="mini-online-text">Online now</div>
+      </div>
+      <div class="mini-online" style="margin-top:3px">
+        <div class="dot-recent"></div>
+        <div class="mini-online-text">Active 2 hours ago</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LinkedIn Link -->
+  <div class="section-card option selected" data-choice="linkedin" onclick="toggleSelect(this)">
+    <div class="s-header">
+      <span class="s-icon">🔗</span>
+      <span class="s-title">External Links</span>
+      <span class="s-badge optional">Optional</span>
+    </div>
+    <div class="s-preview">
+      <div class="s-preview-text">LinkedIn profile link (if they've added one in Settings). Visible only if they've set it.</div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:18px">Items pre-selected are my recommendation. Deselect anything you don't want. Click confirm when done.</p>

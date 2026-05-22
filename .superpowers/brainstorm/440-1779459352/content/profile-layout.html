@@ -1,0 +1,177 @@
+<style>
+  .mockup-wrap { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 16px; }
+  .profile-card { background: #fff; border-radius: 16px; border: 2px solid transparent; overflow: hidden; cursor: pointer; box-shadow: 0 2px 12px rgba(0,0,0,0.08); transition: all 0.2s; }
+  .profile-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.13); transform: translateY(-2px); }
+  .profile-card.selected { border-color: #C9A84C; box-shadow: 0 0 0 3px rgba(201,168,76,0.3); }
+  .card-label { padding: 10px 14px; background: #F0F2F5; display: flex; align-items: center; justify-content: space-between; }
+  .card-label .letter { width: 28px; height: 28px; border-radius: 50%; background: #0D1B4B; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+  .card-label .name { font-weight: 600; font-size: 13px; color: #0D1B4B; }
+
+  /* Option A – LinkedIn Hero */
+  .lk-banner { height: 48px; background: linear-gradient(135deg, #0D1B4B 0%, #1a2f7a 100%); }
+  .lk-hero { padding: 0 14px 10px; background: #fff; position: relative; }
+  .lk-avatar { width: 44px; height: 44px; border-radius: 50%; background: #C9A84C; border: 3px solid #fff; margin-top: -22px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px; }
+  .lk-name { font-weight: 700; font-size: 12px; color: #0D1B4B; margin-top: 4px; }
+  .lk-sub { font-size: 10px; color: #888; }
+  .lk-sdgs { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+  .sdg-chip { font-size: 9px; padding: 2px 7px; border-radius: 99px; font-weight: 600; color: #fff; }
+  .lk-bio { font-size: 9px; color: #555; margin-top: 6px; line-height: 1.4; border-top: 1px solid #f0f0f0; padding-top: 6px; }
+  .lk-section { margin-top: 6px; border-top: 1px solid #f0f0f0; padding: 6px 14px; }
+  .lk-section-title { font-size: 9px; font-weight: 700; color: #0D1B4B; margin-bottom: 4px; }
+  .portfolio-row { display: flex; gap: 5px; }
+  .portfolio-item { flex: 1; height: 28px; background: #F0F2F5; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #666; }
+  .like-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 99px; background: #C9A84C; color: #fff; font-size: 9px; font-weight: 700; margin-top: 8px; }
+
+  /* Option B – Sidebar Layout */
+  .sb-wrap { display: flex; height: 170px; }
+  .sb-side { width: 65px; background: #0D1B4B; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .sb-avatar { width: 38px; height: 38px; border-radius: 50%; background: #C9A84C; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 12px; border: 2px solid rgba(255,255,255,0.3); }
+  .sb-name { color: #fff; font-size: 8px; font-weight: 600; text-align: center; line-height: 1.3; }
+  .sb-country { color: rgba(255,255,255,0.6); font-size: 8px; text-align: center; }
+  .sb-stat { background: rgba(255,255,255,0.1); border-radius: 6px; padding: 4px 6px; text-align: center; width: 100%; }
+  .sb-stat-num { color: #C9A84C; font-size: 11px; font-weight: 700; }
+  .sb-stat-label { color: rgba(255,255,255,0.6); font-size: 7px; }
+  .sb-main { flex: 1; padding: 10px; overflow: hidden; }
+  .sb-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+  .sb-tab { font-size: 8px; padding: 2px 8px; border-radius: 99px; background: #F0F2F5; color: #888; font-weight: 600; }
+  .sb-tab.active { background: #0D1B4B; color: #fff; }
+  .sb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .sb-card { background: #F0F2F5; border-radius: 6px; padding: 6px; }
+  .sb-card-type { font-size: 7px; color: #C9A84C; font-weight: 700; text-transform: uppercase; }
+  .sb-card-title { font-size: 9px; color: #0D1B4B; font-weight: 600; margin-top: 1px; }
+  .sb-like { display: inline-flex; align-items: center; gap: 3px; font-size: 8px; font-weight: 700; padding: 3px 8px; background: #C9A84C; color: #fff; border-radius: 99px; margin-top: 8px; }
+
+  /* Option C – Modern Card Stack */
+  .mc-hero { background: linear-gradient(160deg, #0D1B4B 0%, #0d3470 100%); padding: 12px 14px 30px; position: relative; }
+  .mc-avatar-wrap { display: flex; align-items: center; gap: 8px; }
+  .mc-avatar { width: 40px; height: 40px; border-radius: 12px; background: #C9A84C; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px; }
+  .mc-name { color: #fff; font-size: 11px; font-weight: 700; }
+  .mc-org { color: rgba(255,255,255,0.65); font-size: 9px; }
+  .mc-like-fab { position: absolute; bottom: -12px; right: 14px; background: #C9A84C; border-radius: 20px; padding: 5px 12px; display: flex; align-items: center; gap: 4px; color: #fff; font-size: 9px; font-weight: 700; box-shadow: 0 3px 10px rgba(201,168,76,0.5); }
+  .mc-body { padding: 18px 14px 10px; }
+  .mc-section { background: #fff; border-radius: 10px; padding: 8px 10px; margin-bottom: 6px; border: 1px solid #eee; }
+  .mc-section-title { font-size: 8px; font-weight: 700; color: #0D1B4B; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; display: flex; align-items: center; gap: 4px; }
+  .mc-pills { display: flex; flex-wrap: wrap; gap: 3px; }
+  .mc-pill { font-size: 8px; padding: 2px 7px; border-radius: 99px; background: #F0F2F5; color: #0D1B4B; font-weight: 600; }
+  .mc-port-row { display: flex; gap: 4px; }
+  .mc-port-item { flex: 1; background: linear-gradient(135deg, #F0F2F5, #e8eaed); border-radius: 6px; padding: 5px; }
+  .mc-port-dot { width: 16px; height: 16px; border-radius: 4px; background: #0D1B4B; margin-bottom: 3px; }
+  .mc-port-title { font-size: 7px; color: #333; font-weight: 600; }
+
+  .badge-new { display: inline-block; background: #22c55e; color: #fff; font-size: 8px; padding: 1px 6px; border-radius: 99px; font-weight: 700; margin-left: 4px; }
+</style>
+
+<h2>How should each participant's profile page look?</h2>
+<p class="subtitle">When someone clicks a participant in the Community grid, they land on a profile page. Which layout direction feels right for EGA?</p>
+
+<div class="mockup-wrap">
+
+  <!-- Option A -->
+  <div class="profile-card option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-label">
+      <div class="name">A — LinkedIn Hero</div>
+      <div class="letter">A</div>
+    </div>
+    <!-- Mockup -->
+    <div class="lk-banner"></div>
+    <div class="lk-hero">
+      <div class="lk-avatar">AM</div>
+      <div class="lk-name">Amara Mensah</div>
+      <div class="lk-sub">Ghana · EGA Cohort 3</div>
+      <div class="lk-sdgs">
+        <span class="sdg-chip" style="background:#E5243B">SDG 1</span>
+        <span class="sdg-chip" style="background:#4C9F38">SDG 3</span>
+        <span class="sdg-chip" style="background:#26BDE2">SDG 6</span>
+      </div>
+      <div class="like-btn">♡ 12 Appreciations</div>
+    </div>
+    <div class="lk-section">
+      <div class="lk-section-title">About</div>
+      <div style="font-size:9px;color:#555;line-height:1.4">Passionate about clean water access across West Africa. Working with local governments on SDG 6 initiatives...</div>
+    </div>
+    <div class="lk-section">
+      <div class="lk-section-title">Portfolio (4 items)</div>
+      <div class="portfolio-row">
+        <div class="portfolio-item">📄 Article</div>
+        <div class="portfolio-item">🏆 Certificate</div>
+        <div class="portfolio-item">💼 Project</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="profile-card option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-label">
+      <div class="name">B — Sidebar + Content</div>
+      <div class="letter">B</div>
+    </div>
+    <div class="sb-wrap">
+      <div class="sb-side">
+        <div class="sb-avatar">AM</div>
+        <div class="sb-name">Amara Mensah</div>
+        <div class="sb-country">🇬🇭 Ghana</div>
+        <div class="sb-stat">
+          <div class="sb-stat-num">12</div>
+          <div class="sb-stat-label">Likes</div>
+        </div>
+        <div class="sb-stat">
+          <div class="sb-stat-num">4</div>
+          <div class="sb-stat-label">Items</div>
+        </div>
+        <div class="sb-like">♡ Like</div>
+      </div>
+      <div class="sb-main">
+        <div class="sb-tabs">
+          <div class="sb-tab active">Portfolio</div>
+          <div class="sb-tab">SDGs</div>
+          <div class="sb-tab">Projects</div>
+        </div>
+        <div class="sb-grid">
+          <div class="sb-card"><div class="sb-card-type">Article</div><div class="sb-card-title">Clean Water Access in Accra</div></div>
+          <div class="sb-card"><div class="sb-card-type">Certificate</div><div class="sb-card-title">SDG Leadership 2024</div></div>
+          <div class="sb-card"><div class="sb-card-type">Project</div><div class="sb-card-title">Community Mapping</div></div>
+          <div class="sb-card"><div class="sb-card-type">Video</div><div class="sb-card-title">TEDx Talk Preview</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="profile-card option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-label">
+      <div class="name">C — Modern Cards <span class="badge-new">Recommended</span></div>
+      <div class="letter">C</div>
+    </div>
+    <div class="mc-hero">
+      <div class="mc-avatar-wrap">
+        <div class="mc-avatar">AM</div>
+        <div>
+          <div class="mc-name">Amara Mensah</div>
+          <div class="mc-org">🇬🇭 Ghana · Water & Sanitation Org</div>
+        </div>
+      </div>
+      <div class="mc-like-fab">♡ 12 · Appreciate</div>
+    </div>
+    <div class="mc-body">
+      <div class="mc-section">
+        <div class="mc-section-title">🌍 SDG Focus</div>
+        <div class="mc-pills">
+          <span class="mc-pill" style="background:#fde8ea;color:#E5243B">SDG 1 · No Poverty</span>
+          <span class="mc-pill" style="background:#e8f5e9;color:#4C9F38">SDG 3 · Good Health</span>
+          <span class="mc-pill" style="background:#e3f4fb;color:#26BDE2">SDG 6 · Clean Water</span>
+        </div>
+      </div>
+      <div class="mc-section">
+        <div class="mc-section-title">💼 Portfolio</div>
+        <div class="mc-port-row">
+          <div class="mc-port-item"><div class="mc-port-dot" style="background:#2563eb"></div><div class="mc-port-title">Article</div></div>
+          <div class="mc-port-item"><div class="mc-port-dot" style="background:#C9A84C"></div><div class="mc-port-title">Certificate</div></div>
+          <div class="mc-port-item"><div class="mc-port-dot" style="background:#22c55e"></div><div class="mc-port-title">Video</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:20px">All three show the same data — it's purely the layout direction that differs. Click to select your preference.</p>

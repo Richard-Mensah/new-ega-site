@@ -1,0 +1,264 @@
+<style>
+  .options-wrap { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .layout-opt { background: #fff; border-radius: 14px; border: 2px solid #e5e7eb; overflow: hidden; cursor: pointer; transition: all 0.18s; }
+  .layout-opt:hover { border-color: #C9A84C; box-shadow: 0 4px 16px rgba(201,168,76,0.15); transform: translateY(-2px); }
+  .layout-opt.selected { border-color: #C9A84C; box-shadow: 0 0 0 3px rgba(201,168,76,0.25); }
+  .opt-label { padding: 10px 14px; background: #F0F2F5; display: flex; align-items: center; justify-content: space-between; }
+  .opt-name { font-weight: 700; font-size: 12px; color: #0D1B4B; }
+  .opt-letter { width: 26px; height: 26px; background: #0D1B4B; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+  .rec-badge { font-size: 9px; padding: 2px 7px; border-radius: 99px; background: #C9A84C; color: #fff; font-weight: 700; margin-left: 6px; }
+  .opt-body { padding: 10px; }
+
+  /* Option A - Search + Filter + Grid */
+  .a-search { background: #F0F2F5; border-radius: 7px; padding: 5px 10px; font-size: 9px; color: #aaa; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+  .a-filters { display: flex; gap: 4px; margin-bottom: 8px; overflow: hidden; }
+  .a-filter { font-size: 8px; padding: 2px 8px; border-radius: 99px; border: 1px solid #ddd; color: #666; white-space: nowrap; font-weight: 600; }
+  .a-filter.active { background: #0D1B4B; color: #fff; border-color: #0D1B4B; }
+  .a-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .a-card { background: #F8F9FA; border-radius: 8px; padding: 8px; border: 1px solid #eee; }
+  .a-card-top { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+  .a-avatar { width: 28px; height: 28px; border-radius: 8px; background: #0D1B4B; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 9px; font-weight: 700; flex-shrink: 0; }
+  .a-name { font-size: 9px; font-weight: 700; color: #0D1B4B; }
+  .a-country { font-size: 8px; color: #888; }
+  .a-sdgs { display: flex; gap: 2px; flex-wrap: wrap; }
+  .a-sdg { width: 12px; height: 12px; border-radius: 3px; }
+  .a-like { display: flex; align-items: center; gap: 3px; margin-top: 4px; font-size: 8px; color: #C9A84C; font-weight: 700; }
+
+  /* Option B - Bigger cards, less columns */
+  .b-sort { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .b-sort-label { font-size: 9px; color: #888; }
+  .b-sort-btn { font-size: 8px; padding: 2px 8px; background: #0D1B4B; color: #fff; border-radius: 99px; font-weight: 600; }
+  .b-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
+  .b-card { background: #F8F9FA; border-radius: 8px; padding: 8px 10px; border: 1px solid #eee; display: flex; align-items: center; gap: 8px; }
+  .b-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #0D1B4B, #1a3070); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .b-info { flex: 1; min-width: 0; }
+  .b-name { font-size: 10px; font-weight: 700; color: #0D1B4B; }
+  .b-sub { font-size: 8px; color: #888; }
+  .b-sdgs { display: flex; gap: 2px; margin-top: 3px; }
+  .b-sdg-chip { font-size: 7px; padding: 1px 5px; border-radius: 99px; font-weight: 700; color: #fff; }
+  .b-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .b-like-num { font-size: 10px; font-weight: 700; color: #C9A84C; }
+  .b-like-label { font-size: 7px; color: #aaa; }
+  .b-btn { font-size: 8px; padding: 3px 8px; background: #C9A84C; color: #fff; border-radius: 99px; font-weight: 600; white-space: nowrap; }
+
+  /* Option C - Rich cards with portrait */
+  .c-header { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
+  .c-count { font-size: 9px; color: #888; flex: 1; }
+  .c-view-btns { display: flex; gap: 2px; }
+  .c-view-btn { width: 22px; height: 22px; border-radius: 5px; background: #F0F2F5; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+  .c-view-btn.active { background: #0D1B4B; }
+  .c-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .c-card { background: #fff; border-radius: 10px; border: 1px solid #eee; overflow: hidden; }
+  .c-card-banner { height: 30px; background: linear-gradient(135deg, #0D1B4B 0%, #1a3070 100%); position: relative; }
+  .c-card-banner-sdg { position: absolute; bottom: -8px; right: 8px; display: flex; gap: 2px; }
+  .c-sdg-dot { width: 14px; height: 14px; border-radius: 3px; border: 2px solid #fff; }
+  .c-card-body { padding: 12px 8px 7px; }
+  .c-card-top { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 4px; }
+  .c-avatar { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #C9A84C, #e8bf6a); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 9px; font-weight: 700; margin-top: -20px; border: 2px solid #fff; flex-shrink: 0; }
+  .c-card-name { font-size: 9px; font-weight: 700; color: #0D1B4B; line-height: 1.2; }
+  .c-card-country { font-size: 7px; color: #888; }
+  .c-card-bio { font-size: 8px; color: #666; line-height: 1.4; margin-bottom: 5px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .c-card-footer { display: flex; align-items: center; justify-content: space-between; }
+  .c-like { font-size: 8px; color: #C9A84C; font-weight: 700; display: flex; align-items: center; gap: 3px; }
+  .c-view-link { font-size: 8px; color: #0D1B4B; font-weight: 600; padding: 2px 6px; background: #F0F2F5; border-radius: 99px; }
+</style>
+
+<h2>How should the Community grid look?</h2>
+<p class="subtitle">This is the /dashboard/community page — where participants browse and discover each other. Which approach best fits EGA?</p>
+
+<div class="options-wrap">
+
+  <!-- Option A: Search + SDG Filters + Compact Grid -->
+  <div class="layout-opt option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="opt-label">
+      <span class="opt-name">A — Filter + Compact Grid</span>
+      <span class="opt-letter">A</span>
+    </div>
+    <div class="opt-body">
+      <div class="a-search">🔍 Search participants...</div>
+      <div class="a-filters">
+        <div class="a-filter active">All</div>
+        <div class="a-filter" style="border-color:#E5243B;color:#E5243B">SDG 1</div>
+        <div class="a-filter" style="border-color:#4C9F38;color:#4C9F38">SDG 3</div>
+        <div class="a-filter" style="border-color:#26BDE2;color:#26BDE2">SDG 6</div>
+        <div class="a-filter">+ more</div>
+      </div>
+      <div class="a-grid">
+        <div class="a-card">
+          <div class="a-card-top">
+            <div class="a-avatar">AM</div>
+            <div><div class="a-name">Amara M.</div><div class="a-country">🇬🇭 Ghana</div></div>
+          </div>
+          <div class="a-sdgs">
+            <div class="a-sdg" style="background:#E5243B"></div>
+            <div class="a-sdg" style="background:#4C9F38"></div>
+            <div class="a-sdg" style="background:#26BDE2"></div>
+          </div>
+          <div class="a-like">♡ 12</div>
+        </div>
+        <div class="a-card">
+          <div class="a-card-top">
+            <div class="a-avatar" style="background:#C9A84C">JO</div>
+            <div><div class="a-name">James O.</div><div class="a-country">🇿🇲 Zambia</div></div>
+          </div>
+          <div class="a-sdgs">
+            <div class="a-sdg" style="background:#FCC30B"></div>
+            <div class="a-sdg" style="background:#FF3A21"></div>
+          </div>
+          <div class="a-like">♡ 8</div>
+        </div>
+        <div class="a-card">
+          <div class="a-card-top">
+            <div class="a-avatar" style="background:#4C9F38">SK</div>
+            <div><div class="a-name">Sara K.</div><div class="a-country">🇷🇸 Serbia</div></div>
+          </div>
+          <div class="a-sdgs">
+            <div class="a-sdg" style="background:#19486A"></div>
+            <div class="a-sdg" style="background:#A21942"></div>
+          </div>
+          <div class="a-like">♡ 5</div>
+        </div>
+        <div class="a-card">
+          <div class="a-card-top">
+            <div class="a-avatar" style="background:#26BDE2">LM</div>
+            <div><div class="a-name">Lena M.</div><div class="a-country">🇺🇸 USA</div></div>
+          </div>
+          <div class="a-sdgs">
+            <div class="a-sdg" style="background:#DDA63A"></div>
+            <div class="a-sdg" style="background:#26BDE2"></div>
+          </div>
+          <div class="a-like">♡ 3</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option B: Leaderboard-style list -->
+  <div class="layout-opt option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="opt-label">
+      <span class="opt-name">B — Appreciation Leaderboard</span>
+      <span class="opt-letter">B</span>
+    </div>
+    <div class="opt-body">
+      <div class="b-sort">
+        <span class="b-sort-label">Sorted by: Appreciations</span>
+        <span class="b-sort-btn">Most Active ↓</span>
+      </div>
+      <div class="b-grid">
+        <div class="b-card">
+          <div class="b-avatar">AM</div>
+          <div class="b-info">
+            <div class="b-name">Amara Mensah</div>
+            <div class="b-sub">🇬🇭 Ghana</div>
+            <div class="b-sdgs">
+              <span class="b-sdg-chip" style="background:#E5243B">SDG 1</span>
+              <span class="b-sdg-chip" style="background:#4C9F38">SDG 3</span>
+            </div>
+          </div>
+          <div class="b-right">
+            <div class="b-like-num">12</div>
+            <div class="b-like-label">likes</div>
+            <div class="b-btn">View</div>
+          </div>
+        </div>
+        <div class="b-card">
+          <div class="b-avatar" style="background:linear-gradient(135deg,#C9A84C,#e8bf6a)">JO</div>
+          <div class="b-info">
+            <div class="b-name">James Osei</div>
+            <div class="b-sub">🇿🇲 Zambia</div>
+            <div class="b-sdgs">
+              <span class="b-sdg-chip" style="background:#FCC30B">SDG 2</span>
+            </div>
+          </div>
+          <div class="b-right">
+            <div class="b-like-num">8</div>
+            <div class="b-like-label">likes</div>
+            <div class="b-btn">View</div>
+          </div>
+        </div>
+        <div class="b-card">
+          <div class="b-avatar" style="background:linear-gradient(135deg,#4C9F38,#65b84e)">SK</div>
+          <div class="b-info">
+            <div class="b-name">Sara Kovač</div>
+            <div class="b-sub">🇷🇸 Serbia</div>
+            <div class="b-sdgs">
+              <span class="b-sdg-chip" style="background:#19486A">SDG 17</span>
+            </div>
+          </div>
+          <div class="b-right">
+            <div class="b-like-num">5</div>
+            <div class="b-like-label">likes</div>
+            <div class="b-btn">View</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option C: Rich portrait cards (Recommended) -->
+  <div class="layout-opt option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="opt-label">
+      <span class="opt-name">C — Rich Portrait Cards <span class="rec-badge">Recommended</span></span>
+      <span class="opt-letter">C</span>
+    </div>
+    <div class="opt-body">
+      <div class="c-header">
+        <span class="c-count">24 participants</span>
+        <div class="c-view-btns">
+          <div class="c-view-btn active">⊞</div>
+          <div class="c-view-btn">☰</div>
+        </div>
+      </div>
+      <div class="c-grid">
+        <div class="c-card">
+          <div class="c-card-banner">
+            <div class="c-card-banner-sdg">
+              <div class="c-sdg-dot" style="background:#E5243B"></div>
+              <div class="c-sdg-dot" style="background:#4C9F38"></div>
+              <div class="c-sdg-dot" style="background:#26BDE2"></div>
+            </div>
+          </div>
+          <div class="c-card-body">
+            <div class="c-card-top">
+              <div class="c-avatar">AM</div>
+              <div>
+                <div class="c-card-name">Amara Mensah</div>
+                <div class="c-card-country">🇬🇭 Ghana</div>
+              </div>
+            </div>
+            <div class="c-card-bio">Passionate about clean water access across West Africa and youth leadership...</div>
+            <div class="c-card-footer">
+              <div class="c-like">♡ 12</div>
+              <div class="c-view-link">View →</div>
+            </div>
+          </div>
+        </div>
+        <div class="c-card">
+          <div class="c-card-banner" style="background:linear-gradient(135deg, #1a3070 0%, #2a4090 100%)">
+            <div class="c-card-banner-sdg">
+              <div class="c-sdg-dot" style="background:#FCC30B"></div>
+              <div class="c-sdg-dot" style="background:#FF3A21"></div>
+            </div>
+          </div>
+          <div class="c-card-body">
+            <div class="c-card-top">
+              <div class="c-avatar" style="background:linear-gradient(135deg,#C9A84C,#e8bf6a)">JO</div>
+              <div>
+                <div class="c-card-name">James Osei</div>
+                <div class="c-card-country">🇿🇲 Zambia</div>
+              </div>
+            </div>
+            <div class="c-card-bio">SDG 2 advocate focused on agricultural innovation in Southern Africa...</div>
+            <div class="c-card-footer">
+              <div class="c-like">♡ 8</div>
+              <div class="c-view-link">View →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top: 16px;">Option C includes a search bar and country/SDG filter strip above the grid (not shown in the mockup for space). Click to choose.</p>
