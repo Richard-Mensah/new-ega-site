@@ -51,13 +51,20 @@
       "Bash(git push *)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\app\\\\dashboard\" -Directory)",
       "Bash(xargs grep -l \"notification\\\\|message\\\\|request\")",
-      "Bash(xargs grep -l \"notification\\\\|sendEmail\\\\|toast\\\\|alert\")"
+      "Bash(xargs grep -l \"notification\\\\|sendEmail\\\\|toast\\\\|alert\")",
+      "Bash(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\app\\\\api\\\\mentor\\\\request\\\\[id]\\\\approve\")",
+      "Bash(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\app\\\\api\\\\mentor\\\\request\\\\[id]\\\\decline\")",
+      "Bash(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\app\\\\api\\\\messages\")",
+      "Bash(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\app\\\\api\\\\messages\\\\read\")",
+      "Bash(Write-Output \"dirs created\")",
+      "Bash(mkdir -p \"c:/Users/joe/Documents/GitHub/new-ega-site/app/api/mentor/request/[id]/approve\" \"c:/Users/joe/Documents/GitHub/new-ega-site/app/api/mentor/request/[id]/decline\" \"c:/Users/joe/Documents/GitHub/new-ega-site/app/api/messages/read\" \"c:/Users/joe/Documents/GitHub/new-ega-site/app/dashboard/chat/[userId]\" \"c:/Users/joe/Documents/GitHub/new-ega-site/components/features/chat\" && echo \"done\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\joe\\Documents\\GitHub\\new-ega-site\\node_modules\\next",
       "c:\\Users\\joe\\.claude\\plans",
       "c:\\Users\\joe\\Documents\\GitHub\\new-ega-site\\app\\dashboard\\learning",
-      "c:\\Users\\joe\\Documents\\GitHub\\new-ega-site\\app\\dashboard\\community"
+      "c:\\Users\\joe\\Documents\\GitHub\\new-ega-site\\app\\dashboard\\community",
+      "c:\\Users\\joe\\Documents\\GitHub\\new-ega-site\\app\\api\\mentor\\request\\[id]"
     ]
   }
 }

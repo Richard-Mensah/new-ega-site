@@ -6,7 +6,7 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const { message, focus_areas } = await req.json()
+  const { message, focus_areas, target_mentor_id } = await req.json()
 
   if (!message || typeof message !== "string" || message.trim().length < 20) {
     return NextResponse.json({ error: "Message must be at least 20 characters" }, { status: 400 })
@@ -36,7 +36,12 @@ export async function POST(req: Request) {
 
   const { error } = await supabase
     .from("mentor_requests")
-    .insert({ participant_id: user.id, message: message.trim(), focus_areas })
+    .insert({
+      participant_id: user.id,
+      message: message.trim(),
+      focus_areas,
+      target_mentor_id: target_mentor_id ?? null,
+    })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

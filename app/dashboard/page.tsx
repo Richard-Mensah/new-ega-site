@@ -7,6 +7,7 @@ import ActivityFeed from "@/components/features/dashboard/ActivityFeed"
 import MentorPanel from "@/components/features/dashboard/MentorPanel"
 import OnlineParticipants from "@/components/features/dashboard/OnlineParticipants"
 import MenteeControlPanel from "@/components/features/mentor/MenteeControlPanel"
+import IncomingRequestsPanel, { type IncomingRequest } from "@/components/features/mentor/IncomingRequestsPanel"
 import type { Tables } from "@/types/database"
 import { Users, Calendar, Clock } from "lucide-react"
 
@@ -60,7 +61,7 @@ export default async function DashboardPage() {
   const profile = profileRaw as Tables<"profiles"> | null
 
   if (profile?.role === "mentor") {
-    const [{ data: pairsRaw }, { data: mentorSessionsRaw }] = await Promise.all([
+    const [{ data: pairsRaw }, { data: mentorSessionsRaw }, { data: incomingRaw }] = await Promise.all([
       supabase
         .from("mentorship_pairs")
         .select("participant_id, matched_at, profiles!participant_id(id, full_name, country, avatar_url, organization, bio, linkedin_url, created_at)")
@@ -70,6 +71,12 @@ export default async function DashboardPage() {
         .from("sessions")
         .select("id, participant_id, status, scheduled_at, notes")
         .eq("mentor_id", user.id),
+      supabase
+        .from("mentor_requests")
+        .select("id, participant_id, message, focus_areas, created_at, profiles!participant_id(full_name, avatar_url, organization, country)")
+        .eq("target_mentor_id", user.id)
+        .eq("status", "pending")
+        .order("created_at", { ascending: true }),
     ])
 
     type MenteeProfile = {
@@ -172,6 +179,16 @@ export default async function DashboardPage() {
         }
       })
 
+    type RawIncoming = { id: string; participant_id: string; message: string; focus_areas: string[]; created_at: string; profiles: { full_name: string; avatar_url: string | null; organization: string | null; country: string | null } | null }
+    const incomingRequests: IncomingRequest[] = ((incomingRaw ?? []) as RawIncoming[]).map((r) => ({
+      id: r.id,
+      participant_id: r.participant_id,
+      message: r.message,
+      focus_areas: r.focus_areas ?? [],
+      created_at: r.created_at,
+      participant: r.profiles,
+    }))
+
     const activeMentees = mentees.length
     const sessionsHeld = (mentorSessionsRaw ?? []).filter((s: { status: string }) => s.status === "completed").length
     const daysAsMentor = profile.created_at
@@ -202,6 +219,8 @@ export default async function DashboardPage() {
             </div>
           ))}
         </div>
+
+        <IncomingRequestsPanel requests={incomingRequests} />
 
         <div>
           <h2 className="text-lg font-bold text-brand-navy">My Mentees</h2>

@@ -4,6 +4,7 @@ import Card from "@/components/ui/Card"
 import Badge from "@/components/ui/Badge"
 import ProfileAvatar from "@/components/ui/ProfileAvatar"
 import { MapPin, Calendar, MessageCircle, ExternalLink, Building2, Award, Star, Globe, MessageSquare, Folder, TrendingUp } from "lucide-react"
+import Link from "next/link"
 import type { Tables } from "@/types/database"
 import MentorRequestSection from "@/components/features/mentor/MentorRequestSection"
 
@@ -20,7 +21,7 @@ export default async function MentorPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login")
 
-  const [{ data: pairRaw }, { data: sessionsRaw }, { data: awardsRaw }, { data: requestRaw }] = await Promise.all([
+  const [{ data: pairRaw }, { data: sessionsRaw }, { data: awardsRaw }, { data: requestRaw }, { data: mentorsRaw }] = await Promise.all([
     supabase
       .from("mentorship_pairs")
       .select("mentor_id, profiles!mentor_id(full_name, country, bio, avatar_url, organization, linkedin_url)")
@@ -45,6 +46,10 @@ export default async function MentorPage() {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url, organization, country")
+      .eq("role", "mentor"),
   ])
 
   type MentorProfile = { full_name: string; country: string | null; bio: string | null; avatar_url: string | null; organization: string | null; linkedin_url: string | null }
@@ -54,6 +59,8 @@ export default async function MentorPage() {
   const awards = (awardsRaw ?? []) as AwardWithMentor[]
   type MentorRequest = { id: string; status: string; admin_note: string | null; created_at: string; focus_areas: string[] | null }
   const latestRequest = requestRaw as MentorRequest | null
+  type PickableMentor = { id: string; full_name: string; avatar_url: string | null; organization: string | null; country: string | null }
+  const availableMentors = (mentorsRaw ?? []) as PickableMentor[]
 
   const mentor = pair?.profiles ?? null
 
@@ -84,6 +91,7 @@ export default async function MentorPage() {
           adminNote={latestRequest?.admin_note}
           submittedAt={latestRequest?.created_at}
           focusAreas={latestRequest?.focus_areas}
+          mentors={availableMentors}
         />
       ) : (
         <Card accent="gold">
@@ -115,6 +123,12 @@ export default async function MentorPage() {
                   <ExternalLink size={15} />View LinkedIn Profile
                 </a>
               )}
+              <Link
+                href={`/dashboard/chat/${pair!.mentor_id}`}
+                className="inline-flex items-center gap-1.5 mt-3 ml-4 px-4 py-2 bg-brand-navy text-white rounded-lg text-sm font-semibold hover:bg-brand-navy/90 transition-colors"
+              >
+                <MessageCircle size={15} />Message Mentor
+              </Link>
             </div>
           </div>
         </Card>

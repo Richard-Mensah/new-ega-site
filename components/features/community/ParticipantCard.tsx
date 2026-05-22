@@ -4,6 +4,7 @@ import Link from "next/link"
 import ProfileAvatar from "@/components/ui/ProfileAvatar"
 import LikeButton from "@/components/features/community/LikeButton"
 import { SDG_LIST } from "@/lib/constants/sdgs"
+import { MessageCircle } from "lucide-react"
 import type { PublicProfile } from "@/types"
 
 type Props = {
@@ -80,7 +81,7 @@ export default function ParticipantCard({ participant, likeCount, liked }: Props
         </div>
       </Link>
 
-      {/* Footer — LikeButton lives OUTSIDE the Link to prevent navigation */}
+      {/* Footer — LikeButton and Chat live OUTSIDE the Link to prevent navigation */}
       <div
         className="px-4 pb-3 border-t border-gray-100 pt-2 flex items-center justify-between"
         onClick={(e) => e.stopPropagation()}
@@ -90,13 +91,13 @@ export default function ParticipantCard({ participant, likeCount, liked }: Props
           initialCount={likeCount}
           initialLiked={liked}
         />
-        <span className="text-xs text-gray-400">
-          Joined{" "}
-          {new Date(participant.created_at).toLocaleDateString("en-US", {
-            month: "short",
-            year: "numeric",
-          })}
-        </span>
+        <Link
+          href={`/dashboard/chat/${participant.id}`}
+          className="flex items-center gap-1 text-xs font-semibold text-brand-navy/60 hover:text-brand-navy transition-colors"
+          title="Send a message"
+        >
+          <MessageCircle size={14} />Chat
+        </Link>
       </div>
     </div>
   )

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, BookOpen, Folder, Users, Briefcase, Globe, Settings, LogOut, ShieldCheck } from "lucide-react"
+import { Home, BookOpen, Folder, Users, Briefcase, Globe, Settings, LogOut, ShieldCheck, MessageCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/community", icon: Globe, label: "Community" },
   { href: "/dashboard/mentor", icon: Users, label: "Mentor" },
   { href: "/dashboard/portfolio", icon: Briefcase, label: "Portfolio" },
+  { href: "/dashboard/chat", icon: MessageCircle, label: "Chat" },
 ]
 
 export default function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolean }) {

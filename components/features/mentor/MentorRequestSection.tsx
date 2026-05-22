@@ -2,16 +2,17 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Clock, XCircle } from "lucide-react"
-import RequestMentorModal from "@/components/features/mentor/RequestMentorModal"
+import RequestMentorModal, { type PickableMentor } from "@/components/features/mentor/RequestMentorModal"
 
 type Props = {
   status: "none" | "pending" | "declined"
   adminNote?: string | null
   submittedAt?: string | null
   focusAreas?: string[] | null
+  mentors?: PickableMentor[]
 }
 
-export default function MentorRequestSection({ status, adminNote, submittedAt, focusAreas }: Props) {
+export default function MentorRequestSection({ status, adminNote, submittedAt, focusAreas, mentors = [] }: Props) {
   const [showModal, setShowModal] = useState(false)
   const router = useRouter()
 
@@ -22,9 +23,10 @@ export default function MentorRequestSection({ status, adminNote, submittedAt, f
           <div className="text-6xl mb-4">🤝</div>
           <h2 className="text-xl font-bold text-brand-navy">Request Mentor Support</h2>
           <p className="text-gray-500 text-sm mt-2 max-w-sm mx-auto leading-relaxed">
-            Our team will match you with a mentor who fits your goals and focus areas. Share what you&apos;re looking for to get started.
+            Choose a specific mentor or let our team find the best fit for your goals.
           </p>
           <button
+            type="button"
             className="mt-6 px-6 py-3 bg-brand-gold text-white rounded-xl font-semibold text-sm hover:bg-amber-600 transition-colors"
             onClick={() => setShowModal(true)}
           >
@@ -33,6 +35,7 @@ export default function MentorRequestSection({ status, adminNote, submittedAt, f
         </div>
         {showModal && (
           <RequestMentorModal
+            mentors={mentors}
             onClose={() => setShowModal(false)}
             onSuccess={() => { setShowModal(false); router.refresh() }}
           />
@@ -51,7 +54,7 @@ export default function MentorRequestSection({ status, adminNote, submittedAt, f
           <div className="flex-1">
             <h2 className="font-bold text-amber-800 text-lg">Request Under Review</h2>
             <p className="text-amber-700 text-sm mt-1">
-              Your mentor request has been submitted and our team is reviewing it.
+              Your mentor request has been submitted and is being reviewed.
             </p>
             {focusAreas && focusAreas.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-1.5">
@@ -86,6 +89,7 @@ export default function MentorRequestSection({ status, adminNote, submittedAt, f
           )}
           <p className="text-red-600 text-sm mt-2">You can submit a new request at any time.</p>
           <button
+            type="button"
             className="mt-4 px-5 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 transition-colors"
             onClick={() => setShowModal(true)}
           >
@@ -95,6 +99,7 @@ export default function MentorRequestSection({ status, adminNote, submittedAt, f
       </div>
       {showModal && (
         <RequestMentorModal
+          mentors={mentors}
           onClose={() => setShowModal(false)}
           onSuccess={() => { setShowModal(false); router.refresh() }}
         />

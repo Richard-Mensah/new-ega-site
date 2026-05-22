@@ -30,6 +30,7 @@ type MentorRequestRow = {
   message: string
   focus_areas: string[]
   created_at: string
+  target_mentor_name: string | null
 }
 
 type Props = {
@@ -173,6 +174,11 @@ export default function PairingTable({ pairs: initial, mentors, allParticipants,
                         </span>
                       ))}
                     </div>
+                  )}
+                  {req.target_mentor_name && (
+                    <p className="text-xs font-medium text-brand-navy mt-1">
+                      Requested: {req.target_mentor_name}
+                    </p>
                   )}
                   <p className="text-xs text-gray-500 mt-1 line-clamp-1">{req.message}</p>
                   <p className="text-[10px] text-gray-400 mt-0.5">

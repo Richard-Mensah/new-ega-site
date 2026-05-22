@@ -327,6 +327,7 @@ export type Database = {
         Row: {
           id: string
           participant_id: string
+          target_mentor_id: string | null
           message: string
           focus_areas: string[]
           status: string
@@ -336,6 +337,7 @@ export type Database = {
         Insert: {
           id?: string
           participant_id: string
+          target_mentor_id?: string | null
           message: string
           focus_areas?: string[]
           status?: string
@@ -345,6 +347,29 @@ export type Database = {
         Update: {
           status?: string
           admin_note?: string | null
+          target_mentor_id?: string | null
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          id: string
+          sender_id: string
+          recipient_id: string
+          content: string
+          read_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          sender_id: string
+          recipient_id: string
+          content: string
+          read_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          read_at?: string | null
         }
         Relationships: []
       }

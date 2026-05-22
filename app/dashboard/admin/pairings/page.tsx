@@ -14,6 +14,7 @@ export type MentorRequestRow = {
   message: string
   focus_areas: string[]
   created_at: string
+  target_mentor_name: string | null
 }
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "rmensahuk@gmail.com")
@@ -47,7 +48,7 @@ export default async function PairingsPage() {
     admin.from("mentorship_pairs").select("mentor_id").eq("status", "active"),
     admin
       .from("mentor_requests")
-      .select("id, participant_id, message, focus_areas, status, created_at")
+      .select("id, participant_id, target_mentor_id, message, focus_areas, status, created_at")
       .eq("status", "pending")
       .order("created_at", { ascending: true }),
   ])
@@ -111,6 +112,7 @@ export default async function PairingsPage() {
 
   const pendingRequests: MentorRequestRow[] = (requestsRaw ?? []).map((r) => {
     const p = profileMap.get(r.participant_id)
+    const tm = r.target_mentor_id ? profileMap.get(r.target_mentor_id) : null
     return {
       id: r.id,
       participant_id: r.participant_id,
@@ -121,6 +123,7 @@ export default async function PairingsPage() {
       message: r.message,
       focus_areas: r.focus_areas ?? [],
       created_at: r.created_at,
+      target_mentor_name: tm?.full_name ?? null,
     }
   })
 
