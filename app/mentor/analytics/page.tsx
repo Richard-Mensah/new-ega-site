@@ -82,6 +82,7 @@ export default async function AnalyticsPage() {
       growthPct: getScore("overall"),
       leadership: getScore("leadership"),
       sdgEngagement: getScore("sdg_engagement"),
+      communication: getScore("communication"),
       projects: getScore("projects"),
     }
   })

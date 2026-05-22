@@ -269,6 +269,28 @@ export type Database = {
         Update: Record<string, never>
         Relationships: []
       }
+      mentor_awards: {
+        Row: {
+          id: string
+          mentor_id: string
+          participant_id: string
+          category: string
+          title: string
+          notes: string | null
+          awarded_at: string
+        }
+        Insert: {
+          id?: string
+          mentor_id: string
+          participant_id: string
+          category: string
+          title: string
+          notes?: string | null
+          awarded_at?: string
+        }
+        Update: { title?: string; notes?: string | null }
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           id: string
