@@ -23,11 +23,13 @@ export interface CallContextValue {
   activePartnerName: string | null
   isMuted: boolean
   callDuration: number
+  callError: string | null
   startCall: (partnerId: string, partnerName: string) => Promise<void>
   acceptCall: () => Promise<void>
   rejectCall: () => void
   endCall: () => void
   toggleMute: () => void
+  clearCallError: () => void
 }
 
 const CallContext = createContext<CallContextValue | null>(null)
@@ -54,6 +56,7 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
   const [activePartnerName, setActivePartnerName]   = useState<string | null>(null)
   const [isMuted, setIsMuted]                       = useState(false)
   const [callDuration, setCallDuration]             = useState(0)
+  const [callError, setCallError]                   = useState<string | null>(null)
   const [myName, setMyName]                         = useState("")
 
   // Refs so signal handler never captures stale closures
@@ -120,6 +123,7 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
     setActivePartnerName(null)
     setIsMuted(false)
     setCallDuration(0)
+    setCallError(null)
   }
 
   function createPC(remoteId: string): RTCPeerConnection {
@@ -145,7 +149,9 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
         if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null }
         setCallState("connected")
         setCallDuration(0)
-        timerRef.current = setInterval(() => setCallDuration(d => d + 1), 1000)
+        if (!timerRef.current) {
+          timerRef.current = setInterval(() => setCallDuration(d => d + 1), 1000)
+        }
       } else if (pc.connectionState === "failed") {
         cleanup()
       } else if (pc.connectionState === "disconnected") {
@@ -181,6 +187,7 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
       }, 30000)
 
     } else if (msg.type === "call-answer") {
+      if (!partnerIdRef.current || msg.from !== partnerIdRef.current) return
       pcRef.current?.setRemoteDescription(msg.sdp).then(async () => {
         for (const c of pendingICERef.current) {
           await pcRef.current?.addIceCandidate(c)
@@ -189,6 +196,7 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
       })
 
     } else if (msg.type === "call-ice") {
+      if (!partnerIdRef.current || msg.from !== partnerIdRef.current) return
       if (pcRef.current?.remoteDescription) {
         pcRef.current.addIceCandidate(msg.candidate)
       } else {
@@ -220,6 +228,7 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
     } catch {
+      setCallError("Microphone access was denied. Allow it in your browser settings.")
       return
     }
     localStreamRef.current = stream
@@ -243,10 +252,15 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
     if (callStateRef.current !== "incoming" || !incomingCallerIdRef.current || !incomingOfferRef.current) return
     if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null }
 
+    // Synchronously lock state so a second Accept tap is rejected before any await
+    callStateRef.current = "connected"
+    setCallState("connected")
+
     let stream: MediaStream
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
     } catch {
+      setCallError("Microphone access was denied. Allow it in your browser settings.")
       cleanup()
       return
     }
@@ -292,8 +306,9 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
   return (
     <CallContext.Provider value={{
       callState, incomingCallerName, activePartnerName,
-      isMuted, callDuration,
+      isMuted, callDuration, callError,
       startCall, acceptCall, rejectCall, endCall, toggleMute,
+      clearCallError: () => setCallError(null),
     }}>
       {children}
       <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
