@@ -293,9 +293,9 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
   const isBusy = sending || uploading
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-white shrink-0">
+      <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-white shrink-0 sticky top-0 z-10">
         <button
           type="button"
           onClick={() => router.push("/dashboard/chat")}
@@ -331,7 +331,7 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+      <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-3">
         {messages.length === 0 && (
           <div className="text-center text-gray-400 text-sm mt-12">
             <p>No messages yet.</p>

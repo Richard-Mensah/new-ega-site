@@ -58,7 +58,7 @@ export default async function CommunityPage() {
     .filter((p) => (likeCounts[p.id] ?? 0) > 0)
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="px-4 py-5 sm:p-6 space-y-4 sm:space-y-6 overflow-x-hidden w-full">
       <div>
         <h1 className="text-2xl font-bold text-brand-navy">Community</h1>
         <p className="text-gray-500 text-sm mt-1">

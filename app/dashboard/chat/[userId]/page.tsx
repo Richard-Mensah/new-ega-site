@@ -69,7 +69,7 @@ export default async function ChatThreadPage({ params }: { params: Promise<{ use
   const conversations = Array.from(convMap.values())
 
   return (
-    <div className="flex h-dvh">
+    <div className="flex flex-1 min-h-0 overflow-hidden">
       <div className="hidden md:flex md:w-80 border-r border-gray-100 bg-white flex-col shrink-0">
         <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100">
           <MessageCircle size={18} className="text-brand-navy" />

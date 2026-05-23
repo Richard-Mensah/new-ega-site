@@ -36,10 +36,14 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   font-family: var(--font-inter), Arial, sans-serif;
   color: #111827;
-  background-color: #ffffff;
+  background-color: #F0F2F5;
 }
 
 @utility scrollbar-hide {
