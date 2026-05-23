@@ -87,11 +87,13 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
     const subscribed = new Promise<void>((resolve) => {
       ch.subscribe((status) => { if (status === "SUBSCRIBED") resolve() })
     })
-    const timeout = new Promise<void>((_, reject) =>
-      setTimeout(() => reject(new Error("signal timeout")), 5000)
-    )
+    let timeoutHandle: ReturnType<typeof setTimeout>
+    const timeout = new Promise<void>((_, reject) => {
+      timeoutHandle = setTimeout(() => reject(new Error("signal timeout")), 5000)
+    })
     try {
       await Promise.race([subscribed, timeout])
+      clearTimeout(timeoutHandle!)
       await ch.send({ type: "broadcast", event: "signal", payload: msg })
     } catch {
       // silently swallow timeout/send errors — call will self-cleanup via state
