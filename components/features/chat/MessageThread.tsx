@@ -7,6 +7,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js"
 import ProfileAvatar from "@/components/ui/ProfileAvatar"
 import { Send, ChevronLeft, Paperclip, Mic, MicOff, File as FileIcon, X, CheckCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
+import CallButton from "@/components/features/chat/CallButton"
 
 export type ChatMessage = {
   id: string
@@ -323,6 +324,9 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
               "Offline"
             )}
           </p>
+        </div>
+        <div className="ml-auto shrink-0">
+          <CallButton partnerId={partnerId} partnerName={partnerName} />
         </div>
       </div>
 
