@@ -71,7 +71,8 @@
       "Bash(cat lib/supabase/server.ts)",
       "Bash(cat lib/supabase/server.tsx)",
       "Bash(Get-Content \"C:\\\\Users\\\\joe\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-joe-Documents-GitHub-new-ega-site\\\\b8dd99ca-aabc-4da2-8758-cb2b9231ddf2\\\\tasks\\\\bnqpkvl6h.output\")",
-      "Bash(echo \"EXIT: $?\")"
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(Find c:\\\\Users\\\\joe\\\\Documents\\\\GitHub\\\\new-ega-site\\\\app\\\\dashboard -name \"layout*\" -type f)"
     ],
     "additionalDirectories": [
       "c:\\Users\\joe\\Documents\\GitHub\\new-ega-site\\node_modules\\next",
