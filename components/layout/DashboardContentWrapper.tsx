@@ -8,8 +8,10 @@ export default function DashboardContentWrapper({ children }: { children: React.
   const isChatPage = pathname.startsWith("/dashboard/chat")
   return (
     <div className={cn(
-      "flex-1 flex flex-col md:ml-14 pb-20 md:pb-0",
-      isChatPage ? "overflow-hidden" : "min-h-screen"
+      "flex-1 flex flex-col min-h-0 md:ml-14",
+      isChatPage
+        ? "overflow-hidden"
+        : "overflow-y-auto overflow-x-hidden pb-20 md:pb-0"
     )}>
       {children}
     </div>

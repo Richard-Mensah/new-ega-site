@@ -18,7 +18,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <CallContextProvider currentUserId={user?.id ?? ""}>
-      <div className="flex min-h-screen bg-brand-bg">
+      <div className="flex h-dvh bg-brand-bg">
         <DashboardSidebar isAdmin={isAdmin} />
         <DashboardContentWrapper>
           <PresenceHeartbeat />

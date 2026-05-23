@@ -295,7 +295,7 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-white shrink-0 sticky top-0 z-10">
+      <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-white shrink-0">
         <button
           type="button"
           onClick={() => router.push("/dashboard/chat")}
@@ -398,7 +398,7 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
       </div>
 
       {/* Input */}
-      <div className="shrink-0 px-4 py-3 border-t border-gray-100 bg-white">
+      <div className="shrink-0 px-4 py-3 pb-20 md:pb-3 border-t border-gray-100 bg-white">
         {uploadError && (
           <div className="mb-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-xs text-red-600">
             <span className="flex-1">{uploadError}</span>
