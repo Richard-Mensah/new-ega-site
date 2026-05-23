@@ -72,6 +72,8 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
   const timeoutRef          = useRef<ReturnType<typeof setTimeout> | null>(null)
   const disconnectTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingICERef       = useRef<RTCIceCandidateInit[]>([])
+  const outChannelRef       = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const outChannelTargetRef = useRef<string | null>(null)
 
   // Keep callStateRef in sync with callState
   useEffect(() => { callStateRef.current = callState }, [callState])
@@ -86,29 +88,40 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
   async function sendSignal(toUserId: string, msg: SignalMessage) {
-    const ch = supabase.channel(`call-signal:${toUserId}`)
-    const subscribed = new Promise<void>((resolve) => {
-      ch.subscribe((status) => { if (status === "SUBSCRIBED") resolve() })
-    })
-    let timeoutHandle: ReturnType<typeof setTimeout>
-    const timeout = new Promise<void>((_, reject) => {
-      timeoutHandle = setTimeout(() => reject(new Error("signal timeout")), 5000)
-    })
-    try {
-      await Promise.race([subscribed, timeout])
-      clearTimeout(timeoutHandle!)
-      await ch.send({ type: "broadcast", event: "signal", payload: msg })
-    } catch {
-      // silently swallow timeout/send errors — call will self-cleanup via state
-    } finally {
-      supabase.removeChannel(ch)
+    if (!outChannelRef.current || outChannelTargetRef.current !== toUserId) {
+      if (outChannelRef.current) supabase.removeChannel(outChannelRef.current)
+      const ch = supabase.channel(`call-signal-out:${currentUserId}->${toUserId}`)
+      await new Promise<void>((resolve, reject) => {
+        const t = setTimeout(() => reject(new Error("signal timeout")), 5000)
+        ch.subscribe((s) => { if (s === "SUBSCRIBED") { clearTimeout(t); resolve() } })
+      }).catch(() => {})
+      outChannelRef.current = ch
+      outChannelTargetRef.current = toUserId
     }
+    try {
+      await outChannelRef.current!.send({ type: "broadcast", event: "signal", payload: msg })
+    } catch {
+      // silently swallow send errors — call will self-cleanup via state
+    }
+  }
+
+  async function unlockRemoteAudio() {
+    if (!remoteAudioRef.current) return
+    try {
+      remoteAudioRef.current.muted = true
+      await remoteAudioRef.current.play()
+      remoteAudioRef.current.pause()
+      remoteAudioRef.current.muted = false
+      remoteAudioRef.current.currentTime = 0
+    } catch { /* silently ignore — already unlocked or not needed */ }
   }
 
   function cleanup() {
     if (timerRef.current)           { clearInterval(timerRef.current);  timerRef.current   = null }
     if (timeoutRef.current)         { clearTimeout(timeoutRef.current); timeoutRef.current = null }
     if (disconnectTimerRef.current) { clearTimeout(disconnectTimerRef.current); disconnectTimerRef.current = null }
+    if (outChannelRef.current)      { supabase.removeChannel(outChannelRef.current); outChannelRef.current = null }
+    outChannelTargetRef.current  = null
     localStreamRef.current?.getTracks().forEach(t => t.stop())
     localStreamRef.current = null
     pcRef.current?.close()
@@ -196,7 +209,7 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
       })
 
     } else if (msg.type === "call-ice") {
-      if (!partnerIdRef.current || msg.from !== partnerIdRef.current) return
+      if (partnerIdRef.current && msg.from !== partnerIdRef.current) return
       if (pcRef.current?.remoteDescription) {
         pcRef.current.addIceCandidate(msg.candidate)
       } else {
@@ -224,6 +237,7 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
 
   const startCall = useCallback(async (toPartnerId: string, toPartnerName: string) => {
     if (callStateRef.current !== "idle") return
+    await unlockRemoteAudio()
     let stream: MediaStream
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
@@ -256,6 +270,7 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
     callStateRef.current = "connected"
     setCallState("connected")
 
+    await unlockRemoteAudio()
     let stream: MediaStream
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })

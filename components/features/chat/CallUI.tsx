@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { Phone, PhoneOff, PhoneCall, MicOff, Mic } from "lucide-react"
 import { useCallContext } from "@/context/CallContext"
 import { cn } from "@/lib/utils"
@@ -16,6 +17,40 @@ export default function CallUI() {
     isMuted, callDuration, callError,
     acceptCall, rejectCall, endCall, toggleMute, clearCallError,
   } = useCallContext()
+
+  useEffect(() => {
+    if (callState !== "incoming" && callState !== "calling") return
+    let ctx: AudioContext | null = null
+    let active = true
+
+    const play = async (onMs: number, offMs: number) => {
+      try { ctx = new AudioContext() } catch { return }
+      while (active) {
+        const g = ctx.createGain()
+        g.gain.value = 0.18
+        g.connect(ctx.destination)
+        const oscs = [440, 480].map(hz => {
+          const o = ctx!.createOscillator()
+          o.frequency.value = hz
+          o.connect(g)
+          o.start()
+          return o
+        })
+        await new Promise(r => setTimeout(r, onMs))
+        oscs.forEach(o => o.stop())
+        if (!active) break
+        await new Promise(r => setTimeout(r, offMs))
+      }
+    }
+
+    if (callState === "incoming") play(2000, 4000)
+    else play(1000, 3000)
+
+    return () => {
+      active = false
+      ctx?.close()
+    }
+  }, [callState])
 
   const errorToast = callError ? (
     <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg flex items-center gap-3 max-w-xs">
