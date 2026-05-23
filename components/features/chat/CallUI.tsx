@@ -33,7 +33,7 @@ export default function CallUI() {
           </div>
           <div className="text-center">
             <p className="text-xs text-gray-400 uppercase tracking-wider">Incoming call</p>
-            <p className="text-xl font-bold text-brand-navy mt-1">{incomingCallerName}</p>
+            <p className="text-xl font-bold text-brand-navy mt-1">{incomingCallerName ?? "Unknown"}</p>
           </div>
           <div className="flex gap-8">
             {/* Decline */}
@@ -73,7 +73,7 @@ export default function CallUI() {
           </div>
           <div className="text-center">
             <p className="text-xs text-gray-400 uppercase tracking-wider">Calling…</p>
-            <p className="text-xl font-bold text-brand-navy mt-1">{activePartnerName}</p>
+            <p className="text-xl font-bold text-brand-navy mt-1">{activePartnerName ?? "Unknown"}</p>
           </div>
           <button
             type="button"
@@ -90,7 +90,7 @@ export default function CallUI() {
 
   // ── Connected / in-call bar ────────────────────────────────────────────────
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-safe">
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center">
       <div className="mb-4 mx-4 bg-brand-navy text-white rounded-2xl shadow-2xl px-6 py-3 flex items-center gap-6 w-full max-w-sm">
         <div className="flex-1 min-w-0">
           <p className="text-xs text-white/60 leading-none">In call with</p>
