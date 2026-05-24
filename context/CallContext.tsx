@@ -40,9 +40,15 @@ export function useCallContext(): CallContextValue {
   return ctx
 }
 
-const ICE_CONFIG: RTCConfiguration = {
-  iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+const iceServers: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }]
+if (process.env.NEXT_PUBLIC_TURN_URLS) {
+  iceServers.push({
+    urls: process.env.NEXT_PUBLIC_TURN_URLS.split(","),
+    username: process.env.NEXT_PUBLIC_TURN_USERNAME ?? "",
+    credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL ?? "",
+  })
 }
+const ICE_CONFIG: RTCConfiguration = { iceServers }
 
 interface ProviderProps {
   currentUserId: string
@@ -74,9 +80,11 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
   const pendingICERef       = useRef<RTCIceCandidateInit[]>([])
   const outChannelRef       = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const outChannelTargetRef = useRef<string | null>(null)
+  const callDurationRef     = useRef(0)
 
-  // Keep callStateRef in sync with callState
+  // Keep refs in sync with state
   useEffect(() => { callStateRef.current = callState }, [callState])
+  useEffect(() => { callDurationRef.current = callDuration }, [callDuration])
 
   // Fetch caller's own display name once
   useEffect(() => {
@@ -114,6 +122,16 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
       remoteAudioRef.current.muted = false
       remoteAudioRef.current.currentTime = 0
     } catch { /* silently ignore — already unlocked or not needed */ }
+  }
+
+  function fmtDuration(s: number) {
+    return `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`
+  }
+
+  function insertCallLog(toUserId: string, content: string) {
+    if (!currentUserId || !toUserId) return
+    void supabase.from("messages")
+      .insert({ sender_id: currentUserId, recipient_id: toUserId, content })
   }
 
   function cleanup() {
@@ -216,7 +234,10 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
         pendingICERef.current.push(msg.candidate)
       }
 
-    } else if (msg.type === "call-reject" || msg.type === "call-end") {
+    } else if (msg.type === "call-reject") {
+      if (partnerIdRef.current) insertCallLog(partnerIdRef.current, "📞 Call declined")
+      cleanup()
+    } else if (msg.type === "call-end") {
       cleanup()
     }
   }
@@ -242,6 +263,7 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
     partnerIdRef.current = toPartnerId
     setActivePartnerName(toPartnerName)
     setCallState("calling")
+    void unlockRemoteAudio()  // pre-warm audio during user gesture, non-blocking
 
     let stream: MediaStream
     try {
@@ -262,7 +284,10 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
     await sendSignal(toPartnerId, {
       type: "call-offer", from: currentUserId, fromName: myName || "Someone", sdp: offer,
     })
-    timeoutRef.current = setTimeout(() => cleanup(), 30000)
+    timeoutRef.current = setTimeout(() => {
+      if (partnerIdRef.current) insertCallLog(partnerIdRef.current, "📞 Missed call")
+      cleanup()
+    }, 30000)
   }, [currentUserId, myName]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const acceptCall = useCallback(async () => {
@@ -309,6 +334,9 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
 
   const endCall = useCallback(() => {
     if (partnerIdRef.current) {
+      if (callStateRef.current === "connected") {
+        insertCallLog(partnerIdRef.current, `📞 Call ended · ${fmtDuration(callDurationRef.current)}`)
+      }
       sendSignal(partnerIdRef.current, { type: "call-end", from: currentUserId })
     }
     cleanup()

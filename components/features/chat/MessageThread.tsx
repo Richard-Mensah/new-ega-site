@@ -340,6 +340,18 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
         )}
         {messages.map((msg) => {
           const isMe = msg.sender_id === currentUserId
+
+          // Call log messages render as centered pills, not bubbles
+          if (msg.content?.startsWith("📞 ")) {
+            return (
+              <div key={msg.id} className="flex justify-center my-1">
+                <span className="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full select-none">
+                  {msg.content}
+                </span>
+              </div>
+            )
+          }
+
           return (
             <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
               {!isMe && (

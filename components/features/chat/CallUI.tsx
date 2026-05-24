@@ -25,6 +25,7 @@ export default function CallUI() {
 
     const play = async (onMs: number, offMs: number) => {
       try { ctx = new AudioContext() } catch { return }
+      try { await ctx.resume() } catch { /* suspended on iOS without user gesture */ }
       while (active) {
         const g = ctx.createGain()
         g.gain.value = 0.18
