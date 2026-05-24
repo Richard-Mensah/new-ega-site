@@ -90,7 +90,7 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
   async function sendSignal(toUserId: string, msg: SignalMessage) {
     if (!outChannelRef.current || outChannelTargetRef.current !== toUserId) {
       if (outChannelRef.current) supabase.removeChannel(outChannelRef.current)
-      const ch = supabase.channel(`call-signal-out:${currentUserId}->${toUserId}`)
+      const ch = supabase.channel(`call-signal:${toUserId}`)
       await new Promise<void>((resolve, reject) => {
         const t = setTimeout(() => reject(new Error("signal timeout")), 5000)
         ch.subscribe((s) => { if (s === "SUBSCRIBED") { clearTimeout(t); resolve() } })
@@ -237,18 +237,21 @@ export function CallContextProvider({ currentUserId, children }: ProviderProps) 
 
   const startCall = useCallback(async (toPartnerId: string, toPartnerName: string) => {
     if (callStateRef.current !== "idle") return
-    await unlockRemoteAudio()
+
+    // Show calling UI immediately — instant feedback before mic permission dialog
+    partnerIdRef.current = toPartnerId
+    setActivePartnerName(toPartnerName)
+    setCallState("calling")
+
     let stream: MediaStream
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
     } catch {
       setCallError("Microphone access was denied. Allow it in your browser settings.")
+      cleanup()
       return
     }
     localStreamRef.current = stream
-    partnerIdRef.current   = toPartnerId
-    setActivePartnerName(toPartnerName)
-    setCallState("calling")
 
     const pc = createPC(toPartnerId)
     pcRef.current = pc
