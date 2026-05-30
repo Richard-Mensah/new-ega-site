@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import type { RealtimeChannel } from "@supabase/supabase-js"
 import ProfileAvatar from "@/components/ui/ProfileAvatar"
-import { Send, ChevronLeft, Paperclip, Mic, MicOff, File as FileIcon, X, CheckCheck } from "lucide-react"
+import { Send, ChevronLeft, Paperclip, Mic, MicOff, File as FileIcon, X, CheckCheck, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import CallButton from "@/components/features/chat/CallButton"
 
@@ -19,6 +19,8 @@ export type ChatMessage = {
   attachment_url?: string | null
   attachment_type?: "image" | "audio" | "file" | null
   attachment_name?: string | null
+  edited_at?: string | null
+  is_deleted?: boolean
 }
 
 type Props = {
@@ -41,6 +43,11 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
   // Recorded audio waiting to be reviewed/sent
   const [pendingAudio, setPendingAudio] = useState<{ blob: Blob; url: string; name: string } | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editText, setEditText] = useState("")
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
 
   const router = useRouter()
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -48,6 +55,7 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastTypingRef = useRef(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -76,6 +84,18 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
     }
   }, [pendingAudio])
 
+  // Close the message action menu when clicking outside
+  useEffect(() => {
+    if (!menuOpenId) return
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpenId(null)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [menuOpenId])
+
   useEffect(() => {
     const channelId = [currentUserId, partnerId].sort().join("-")
     const ch = supabase.channel(`dm:${channelId}`)
@@ -100,6 +120,18 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
         setIsTyping(true)
         if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
         typingTimerRef.current = setTimeout(() => setIsTyping(false), 2000)
+      })
+      .on("broadcast", { event: "edit_message" }, ({ payload }) => {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === payload.id ? { ...m, content: payload.content, edited_at: payload.edited_at } : m
+          )
+        )
+      })
+      .on("broadcast", { event: "delete_message" }, ({ payload }) => {
+        setMessages((prev) =>
+          prev.map((m) => m.id === payload.id ? { ...m, is_deleted: true } : m)
+        )
       })
       .on(
         "postgres_changes",
@@ -284,6 +316,55 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
     }
   }
 
+  async function handleEditSave(msgId: string) {
+    if (!editText.trim() || savingEdit) return
+    setSavingEdit(true)
+    try {
+      const res = await fetch(`/api/messages/${msgId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: editText.trim() }),
+      })
+      if (res.ok) {
+        const updated = await res.json() as ChatMessage
+        setMessages((prev) => prev.map((m) => m.id === msgId ? { ...m, ...updated } : m))
+        channelRef.current?.send({
+          type: "broadcast",
+          event: "edit_message",
+          payload: { id: msgId, content: updated.content, edited_at: updated.edited_at },
+        })
+      }
+    } finally {
+      setSavingEdit(false)
+      setEditingId(null)
+      setEditText("")
+    }
+  }
+
+  async function handleDelete(msgId: string) {
+    setMenuOpenId(null)
+    const res = await fetch(`/api/messages/${msgId}`, { method: "DELETE" })
+    if (res.ok) {
+      setMessages((prev) => prev.map((m) => m.id === msgId ? { ...m, is_deleted: true } : m))
+      channelRef.current?.send({
+        type: "broadcast",
+        event: "delete_message",
+        payload: { id: msgId },
+      })
+    }
+  }
+
+  function startEdit(msg: ChatMessage) {
+    setMenuOpenId(null)
+    setEditingId(msg.id)
+    setEditText(msg.content)
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setEditText("")
+  }
+
   function formatSecs(s: number) {
     const m = Math.floor(s / 60).toString().padStart(2, "0")
     const sec = (s % 60).toString().padStart(2, "0")
@@ -341,7 +422,7 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
         {messages.map((msg) => {
           const isMe = msg.sender_id === currentUserId
 
-          // Call log messages render as centered pills, not bubbles
+          // Call log messages render as centered pills — no action menu
           if (msg.content?.startsWith("📞 ")) {
             return (
               <div key={msg.id} className="flex justify-center my-1">
@@ -352,13 +433,78 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
             )
           }
 
+          // Soft-deleted messages show a placeholder
+          if (msg.is_deleted) {
+            return (
+              <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
+                {!isMe && (
+                  <div className="shrink-0 mr-2 mt-1">
+                    <ProfileAvatar avatarUrl={partnerAvatar} fullName={partnerName} size="xs" />
+                  </div>
+                )}
+                <div className={cn(
+                  "max-w-xs lg:max-w-md px-4 py-2.5 rounded-2xl text-sm italic",
+                  isMe ? "bg-brand-navy/30 text-white/50 rounded-tr-sm" : "bg-gray-100 text-gray-400 rounded-tl-sm"
+                )}>
+                  This message was deleted.
+                </div>
+              </div>
+            )
+          }
+
           return (
-            <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
+            <div
+              key={msg.id}
+              className={cn("flex items-end gap-1", isMe ? "justify-end" : "justify-start")}
+              onMouseEnter={() => isMe && setHoveredId(msg.id)}
+              onMouseLeave={() => { if (menuOpenId !== msg.id) setHoveredId(null) }}
+            >
+              {/* Action menu — only for own messages */}
+              {isMe && (
+                <div
+                  className="relative flex items-center shrink-0 order-first"
+                  ref={menuOpenId === msg.id ? menuRef : undefined}
+                >
+                  {(hoveredId === msg.id || menuOpenId === msg.id) && (
+                    <button
+                      type="button"
+                      aria-label="Message options"
+                      onClick={() => setMenuOpenId(menuOpenId === msg.id ? null : msg.id)}
+                      className="p-1 rounded-lg text-gray-400 hover:text-brand-navy hover:bg-gray-100 transition-colors"
+                    >
+                      <MoreHorizontal size={15} />
+                    </button>
+                  )}
+                  {menuOpenId === msg.id && (
+                    <div className="absolute bottom-full right-0 mb-1 z-10 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[120px]">
+                      {msg.content && (
+                        <button
+                          type="button"
+                          onClick={() => startEdit(msg)}
+                          className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <Pencil size={13} />
+                          {msg.attachment_type ? "Edit caption" : "Edit"}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(msg.id)}
+                        className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 size={13} /> Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {!isMe && (
                 <div className="shrink-0 mr-2 mt-1">
                   <ProfileAvatar avatarUrl={partnerAvatar} fullName={partnerName} size="xs" />
                 </div>
               )}
+
               <div
                 className={cn(
                   "max-w-xs lg:max-w-md px-4 py-2.5 rounded-2xl text-sm leading-relaxed",
@@ -392,8 +538,46 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
                     <span className="truncate max-w-[180px]">{msg.attachment_name ?? "File"}</span>
                   </a>
                 )}
-                {msg.content && <p>{msg.content}</p>}
+
+                {/* Inline edit or plain text */}
+                {editingId === msg.id ? (
+                  <div className="flex flex-col gap-1.5 mt-1">
+                    <textarea
+                      autoFocus
+                      rows={2}
+                      aria-label="Edit message"
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleEditSave(msg.id) }
+                        if (e.key === "Escape") cancelEdit()
+                      }}
+                      className="w-full resize-none rounded-lg border border-white/30 bg-white/10 text-white placeholder-white/40 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-white/50"
+                    />
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        type="button"
+                        onClick={cancelEdit}
+                        className="px-2 py-0.5 text-xs text-white/60 hover:text-white rounded transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleEditSave(msg.id)}
+                        disabled={savingEdit || !editText.trim()}
+                        className="px-2 py-0.5 text-xs bg-white/20 hover:bg-white/30 text-white rounded transition-colors disabled:opacity-40"
+                      >
+                        {savingEdit ? "Saving…" : "Save"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  msg.content && <p>{msg.content}</p>
+                )}
+
                 <p className={cn("text-[10px] mt-1 flex items-center justify-end gap-0.5", isMe ? "text-white/60" : "text-gray-400")}>
+                  {msg.edited_at && <span className="mr-0.5">edited ·</span>}
                   <span>{new Date(msg.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</span>
                   {isMe && (
                     <CheckCheck
@@ -468,6 +652,7 @@ export default function MessageThread({ currentUserId, partnerId, partnerName, p
             <input
               ref={fileInputRef}
               type="file"
+              aria-hidden="true"
               className="hidden"
               accept="image/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
               onChange={handleFileSelect}

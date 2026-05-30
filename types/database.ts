@@ -359,6 +359,11 @@ export type Database = {
           content: string
           read_at: string | null
           created_at: string
+          attachment_url: string | null
+          attachment_type: "image" | "audio" | "file" | null
+          attachment_name: string | null
+          edited_at: string | null
+          is_deleted: boolean
         }
         Insert: {
           id?: string
@@ -367,9 +372,17 @@ export type Database = {
           content: string
           read_at?: string | null
           created_at?: string
+          attachment_url?: string | null
+          attachment_type?: "image" | "audio" | "file" | null
+          attachment_name?: string | null
+          edited_at?: string | null
+          is_deleted?: boolean
         }
         Update: {
           read_at?: string | null
+          content?: string
+          edited_at?: string | null
+          is_deleted?: boolean
         }
         Relationships: []
       }
